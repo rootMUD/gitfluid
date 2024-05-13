@@ -78,7 +78,7 @@ Run smart contract test with `yarn hardhat:test`
 
     💡Fork from
     
-  * [scaffold-eth](https://github.com/rootMUD/bodhi-img) - 50%
+  * [bodhi-img](https://github.com/rootMUD/bodhi-img) - 50%
  
     💡Fork from
 
