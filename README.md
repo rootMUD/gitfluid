@@ -74,9 +74,12 @@ Run smart contract test with `yarn hardhat:test`
 
 * Related Repos - 30%
 
-  * [bodhi-img](https://github.com/rootMUD/bodhi-img) - 100%
+  * [bodhi-img](https://github.com/rootMUD/bodhi-img) - 50%
 
     💡Fork from
-
+    
+  * [scaffold-eth](https://github.com/rootMUD/bodhi-img) - 50%
+ 
+    💡Fork from
 
 
