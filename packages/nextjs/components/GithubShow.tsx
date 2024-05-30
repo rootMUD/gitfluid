@@ -1,9 +1,9 @@
-import { CardTitle, CardDescription, CardHeader, CardContent, Card } from "~~/components/ui/card";
+import { useState } from "react";
 import Link from "next/link";
-import ReactMarkdown from 'react-markdown';
-import { useState } from 'react';
-
-import { useScaffoldContractWrite, useScaffoldContractRead } from "~~/hooks/scaffold-eth";
+import "github-markdown-css";
+import ReactMarkdown from "react-markdown";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/components/ui/card";
+import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 
 // Props type definition (optional but recommended for TypeScript)
 interface Repo {
@@ -47,7 +47,7 @@ export function GithubShow({ repositories }: GithubShowProps) {
               </div>
               <div className="space-y-1">
                 <h4 className="text-sm font-medium">Distribution Rules</h4>
-                <ReactMarkdown className="space-y-1 text-sm text-gray-500 dark:text-gray-400">
+                <ReactMarkdown className="space-y-1 text-sm text-gray-500 markdown-body dark:text-gray-400">
                   {repo.distributionRulesMD}
                 </ReactMarkdown>
               </div>
