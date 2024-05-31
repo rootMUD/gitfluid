@@ -4,6 +4,10 @@
   <a href="https://bodhi-img.vercel.app"> -[ Lanuch App ]- </a>
 </h4>
 
+🐱 See the contracts information:
+
+> https://console.superfluid.finance/optimism-mainnet/protocol
+
 🐆 Stream and distribute tokens for GitHub repos and contributors! 
 
 ## Quickstart
