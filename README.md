@@ -8,6 +8,10 @@
 
 > https://console.superfluid.finance/optimism-mainnet/protocol
 
+Test Token RMUDx: 
+
+> https://optimistic.etherscan.io/address/0xaf921d3d5a903f8b658aeaebed7a30b3dbb5b7bc
+
 🐆 Stream and distribute tokens for GitHub repos and contributors! 
 
 ## Quickstart
