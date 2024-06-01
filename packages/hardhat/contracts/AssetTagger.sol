@@ -6,7 +6,7 @@ pragma solidity >=0.7.0 <0.9.0;
  * @title Ballot
  * @dev Implements voting process along with vote delegation
  */
-contract AssetTagger {
+contract CFAv1Forwarder {
 
     struct Voter {
         uint weight; // weight is accumulated by delegation

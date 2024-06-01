@@ -4,264 +4,182 @@ const contracts = {
       chainId: "10",
       name: "optimism",
       contracts: {
-        AssetTagger: {
-          address: "0x91Ab92D5a6d85a25f4d16A89B16687a8964F5A6A",
+        CFAv1Forwarder: {
+          address: "0xcfA132E353cB4E398080B9700609bb008eceB125",
           abi: [
             {
-              inputs: [
-                {
-                  internalType: "string",
-                  name: "_vectorName",
-                  type: "string",
-                },
-                {
-                  internalType: "string",
-                  name: "_vectorDescription",
-                  type: "string",
-                },
-              ],
+              inputs: [{ internalType: "contract ISuperfluid", name: "host", type: "address" }],
               stateMutability: "nonpayable",
               type: "constructor",
             },
-            {
-              anonymous: false,
-              inputs: [
-                {
-                  indexed: false,
-                  internalType: "uint256",
-                  name: "tagIndex",
-                  type: "uint256",
-                },
-                {
-                  indexed: false,
-                  internalType: "bool",
-                  name: "decide",
-                  type: "bool",
-                },
-              ],
-              name: "JudgeSet",
-              type: "event",
-            },
+            { inputs: [], name: "CFA_FWD_INVALID_FLOW_RATE", type: "error" },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "_tagIndex",
-                  type: "uint256",
-                },
-                {
-                  internalType: "bool",
-                  name: "_decide",
-                  type: "bool",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
+                { internalType: "bytes", name: "userData", type: "bytes" },
               ],
-              name: "judgeTag",
-              outputs: [],
+              name: "createFlow",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
               stateMutability: "nonpayable",
               type: "function",
             },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "_assetId",
-                  type: "uint256",
-                },
-                {
-                  internalType: "string",
-                  name: "_metadata",
-                  type: "string",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
+                { internalType: "bytes", name: "userData", type: "bytes" },
               ],
-              name: "tagItem",
-              outputs: [],
+              name: "deleteFlow",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
               stateMutability: "nonpayable",
               type: "function",
             },
             {
-              anonymous: false,
               inputs: [
-                {
-                  indexed: true,
-                  internalType: "address",
-                  name: "tagger",
-                  type: "address",
-                },
-                {
-                  indexed: false,
-                  internalType: "uint256",
-                  name: "assetId",
-                  type: "uint256",
-                },
-                {
-                  indexed: false,
-                  internalType: "string",
-                  name: "metadata",
-                  type: "string",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "account", type: "address" },
               ],
-              name: "TagSet",
-              type: "event",
-            },
-            {
-              inputs: [],
-              name: "chairperson",
+              name: "getAccountFlowInfo",
               outputs: [
-                {
-                  internalType: "address",
-                  name: "",
-                  type: "address",
-                },
-              ],
-              stateMutability: "view",
-              type: "function",
-            },
-            {
-              inputs: [],
-              name: "judgeIndex",
-              outputs: [
-                {
-                  internalType: "uint256",
-                  name: "",
-                  type: "uint256",
-                },
+                { internalType: "uint256", name: "lastUpdated", type: "uint256" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
+                { internalType: "uint256", name: "deposit", type: "uint256" },
+                { internalType: "uint256", name: "owedDeposit", type: "uint256" },
               ],
               stateMutability: "view",
               type: "function",
             },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "",
-                  type: "uint256",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "account", type: "address" },
               ],
-              name: "judges",
+              name: "getAccountFlowrate",
+              outputs: [{ internalType: "int96", name: "flowrate", type: "int96" }],
+              stateMutability: "view",
+              type: "function",
+            },
+            {
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
+              ],
+              name: "getBufferAmountByFlowrate",
+              outputs: [{ internalType: "uint256", name: "bufferAmount", type: "uint256" }],
+              stateMutability: "view",
+              type: "function",
+            },
+            {
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
+              ],
+              name: "getFlowInfo",
               outputs: [
-                {
-                  internalType: "bool",
-                  name: "",
-                  type: "bool",
-                },
+                { internalType: "uint256", name: "lastUpdated", type: "uint256" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
+                { internalType: "uint256", name: "deposit", type: "uint256" },
+                { internalType: "uint256", name: "owedDeposit", type: "uint256" },
               ],
               stateMutability: "view",
               type: "function",
             },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "",
-                  type: "uint256",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "flowOperator", type: "address" },
               ],
-              name: "judgesIndexByAsset",
+              name: "getFlowOperatorPermissions",
               outputs: [
-                {
-                  internalType: "bool",
-                  name: "",
-                  type: "bool",
-                },
-              ],
-              stateMutability: "view",
-              type: "function",
-            },
-            {
-              inputs: [],
-              name: "tagIndex",
-              outputs: [
-                {
-                  internalType: "uint256",
-                  name: "",
-                  type: "uint256",
-                },
+                { internalType: "uint8", name: "permissions", type: "uint8" },
+                { internalType: "int96", name: "flowrateAllowance", type: "int96" },
               ],
               stateMutability: "view",
               type: "function",
             },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "",
-                  type: "uint256",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
               ],
-              name: "tags",
-              outputs: [
-                {
-                  internalType: "uint256",
-                  name: "assetId",
-                  type: "uint256",
-                },
-                {
-                  internalType: "string",
-                  name: "metadata",
-                  type: "string",
-                },
-                {
-                  internalType: "address",
-                  name: "creator",
-                  type: "address",
-                },
-              ],
+              name: "getFlowrate",
+              outputs: [{ internalType: "int96", name: "flowrate", type: "int96" }],
               stateMutability: "view",
               type: "function",
             },
             {
               inputs: [
-                {
-                  internalType: "uint256",
-                  name: "",
-                  type: "uint256",
-                },
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "flowOperator", type: "address" },
               ],
-              name: "tagsIndexByAsset",
-              outputs: [
-                {
-                  internalType: "uint256",
-                  name: "assetId",
-                  type: "uint256",
-                },
-                {
-                  internalType: "string",
-                  name: "metadata",
-                  type: "string",
-                },
-                {
-                  internalType: "address",
-                  name: "creator",
-                  type: "address",
-                },
-              ],
-              stateMutability: "view",
+              name: "grantPermissions",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
+              stateMutability: "nonpayable",
               type: "function",
             },
             {
-              inputs: [],
-              name: "vectorDescription",
-              outputs: [
-                {
-                  internalType: "string",
-                  name: "",
-                  type: "string",
-                },
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "flowOperator", type: "address" },
               ],
-              stateMutability: "view",
+              name: "revokePermissions",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
+              stateMutability: "nonpayable",
               type: "function",
             },
             {
-              inputs: [],
-              name: "vectorName",
-              outputs: [
-                {
-                  internalType: "string",
-                  name: "",
-                  type: "string",
-                },
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
               ],
-              stateMutability: "view",
+              name: "setFlowrate",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+            {
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
+              ],
+              name: "setFlowrateFrom",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+            {
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "sender", type: "address" },
+                { internalType: "address", name: "receiver", type: "address" },
+                { internalType: "int96", name: "flowrate", type: "int96" },
+                { internalType: "bytes", name: "userData", type: "bytes" },
+              ],
+              name: "updateFlow",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
+              stateMutability: "nonpayable",
+              type: "function",
+            },
+            {
+              inputs: [
+                { internalType: "contract ISuperToken", name: "token", type: "address" },
+                { internalType: "address", name: "flowOperator", type: "address" },
+                { internalType: "uint8", name: "permissions", type: "uint8" },
+                { internalType: "int96", name: "flowrateAllowance", type: "int96" },
+              ],
+              name: "updateFlowOperatorPermissions",
+              outputs: [{ internalType: "bool", name: "", type: "bool" }],
+              stateMutability: "nonpayable",
               type: "function",
             },
           ],

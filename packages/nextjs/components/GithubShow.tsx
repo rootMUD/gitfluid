@@ -1,9 +1,9 @@
-import { useState } from "react";
 import Link from "next/link";
 import "github-markdown-css";
 import ReactMarkdown from "react-markdown";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/components/ui/card";
-import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { parseEther } from "viem";
 
 // Props type definition (optional but recommended for TypeScript)
 interface Repo {
@@ -21,9 +21,24 @@ interface GithubShowProps {
 export function GithubShow({ repositories }: GithubShowProps) {
   // Assuming a function `createSuperfluidStream` exists to handle the stream creation
   const createSuperfluidStream = (address, distributionRulesJSON) => {
+
     console.log(`Creating superfluid stream for address: ${address}`);
     console.log(`Creating superfluid stream based on rules: ${JSON.stringify(distributionRulesJSON)}`);
-    // Here, you would typically call your API or perform the action to create the stream
+    // TODO: Here, you would typically call your API or perform the action to create the stream
+    // TODO: call createFlow multiple times.
+    // set flowRate by the rules. total_flowRate = a * their flowRate + b * their flowRate + c * their flowRate
+  };
+
+  const createFlow = (address, flowRate) => {
+    const { writeAsync, isLoading } = useScaffoldContractWrite({
+      contractName: "CFAv1Forwarder",
+      functionName: "createFlow",
+      args: ["sender", "receiver", "flowrate", "0x0"],
+      value: parseEther("0"),
+      onBlockConfirmation: txnReceipt => {
+        console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+      },
+    });
   };
 
   return (
@@ -51,6 +66,7 @@ export function GithubShow({ repositories }: GithubShowProps) {
                   {repo.distributionRulesMD}
                 </ReactMarkdown>
               </div>
+              {/* TODO: A inputbox for the total flow rate. */}
               <button
                 onClick={() => createSuperfluidStream(repo.ethAddress, repo.distributionRulesJSON)}
                 className="mt-4 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"

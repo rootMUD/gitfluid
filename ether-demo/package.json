@@ -1,0 +1,17 @@
+{
+  "name": "ether-demo",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "An ether demo for superfluid.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ethers": "^5.0.0",
+    "wagmi": "^2.9.8"
+  }
+}
