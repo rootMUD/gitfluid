@@ -1,9 +1,9 @@
 import Link from "next/link";
 import "github-markdown-css";
 import ReactMarkdown from "react-markdown";
+import { parseEther } from "viem";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/components/ui/card";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
-import { parseEther } from "viem";
 
 // Props type definition (optional but recommended for TypeScript)
 interface Repo {
@@ -21,7 +21,6 @@ interface GithubShowProps {
 export function GithubShow({ repositories }: GithubShowProps) {
   // Assuming a function `createSuperfluidStream` exists to handle the stream creation
   const createSuperfluidStream = (address, distributionRulesJSON) => {
-
     console.log(`Creating superfluid stream for address: ${address}`);
     console.log(`Creating superfluid stream based on rules: ${JSON.stringify(distributionRulesJSON)}`);
     // TODO: Here, you would typically call your API or perform the action to create the stream
