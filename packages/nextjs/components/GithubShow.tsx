@@ -1,8 +1,9 @@
-import { JSX, SVGProps } from "react";
+import { JSX, SVGProps, useState } from "react";
 import Link from "next/link";
+import { GithubSuperfluidStream } from "./GithubSuperfluidStrem";
 import "github-markdown-css";
 import ReactMarkdown from "react-markdown";
-import { parseEther } from "viem";
+import { formatEther, parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/components/ui/card";
 import { useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
@@ -21,7 +22,7 @@ interface ContributorDetail {
   name: string;
   url: string;
 }
-interface DistributionRulesJSON {
+export interface DistributionRulesJSON {
   contributors: Array<ContributorDetail>;
   relatedRepos: Array<RepoDetail>;
 }
@@ -39,6 +40,7 @@ interface GithubShowProps {
 }
 
 export function GithubShow({ repositories }: GithubShowProps) {
+  const [totalFlowRate, setTotalFlowRate] = useState("");
   const { address: senderAddress } = useAccount();
   const { writeAsync, isIdle, isSuccess, isError, isLoading } = useScaffoldContractWrite({
     contractName: "CFAv1Forwarder",
@@ -53,70 +55,101 @@ export function GithubShow({ repositories }: GithubShowProps) {
   const createSuperfluidStream = (address: string, distributionRulesJSON: DistributionRulesJSON) => {
     console.log(`Creating superfluid stream for address: ${address}`);
     console.log(`Creating superfluid stream based on rules: ${JSON.stringify(distributionRulesJSON)}`);
+    console.log(`Creating superfluid stream with total flow rate: ${totalFlowRate}`);
     // TODO: Here, you would typically call your API or perform the action to create the stream
     // TODO: call createFlow multiple times.
     // set flowRate by the rules. total_flowRate = a * their flowRate + b * their flowRate + c * their flowRate
-    const flowRateMap = new Map<string, bigint>();
+    const flowRateRatioMap = new Map<string, { address: string; flowRateRatio: bigint }>();
     distributionRulesJSON.contributors.forEach(contributor => {
-      if (flowRateMap.has(contributor.addr)) {
-        const flowRate = flowRateMap.get(contributor.addr);
+      if (flowRateRatioMap.has(contributor.addr)) {
+        const flowRate = flowRateRatioMap.get(contributor.addr);
         if (flowRate) {
-          flowRateMap.set(contributor.addr, flowRate + BigInt(contributor.distribution_rate));
+          flowRateRatioMap.set(contributor.addr, {
+            address: contributor.addr,
+            flowRateRatio: flowRate.flowRateRatio + BigInt(contributor.distribution_rate),
+          });
         }
       } else {
-        flowRateMap.set(contributor.addr, BigInt(contributor.distribution_rate));
+        flowRateRatioMap.set(contributor.addr, {
+          address: contributor.addr,
+          flowRateRatio: BigInt(contributor.distribution_rate),
+        });
       }
     });
     distributionRulesJSON.relatedRepos.forEach(repo => {
-      if (flowRateMap.has(repo.addr)) {
-        const flowRate = flowRateMap.get(repo.addr);
+      if (flowRateRatioMap.has(repo.addr)) {
+        const flowRate = flowRateRatioMap.get(repo.addr);
         if (flowRate) {
-          flowRateMap.set(repo.addr, flowRate + BigInt(repo.distribution_rate));
+          flowRateRatioMap.set(repo.addr, {
+            address: repo.addr,
+            flowRateRatio: flowRate.flowRateRatio + BigInt(repo.distribution_rate),
+          });
         }
       } else {
-        flowRateMap.set(repo.addr, BigInt(repo.distribution_rate));
+        flowRateRatioMap.set(repo.addr, { address: repo.addr, flowRateRatio: BigInt(repo.distribution_rate) });
       }
     });
-    flowRateMap.forEach((flowRate, receiver) => {
-      writeAsync({
-        args: [process.env.NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, undefined],
-        value: parseEther("0"),
-      });
-    });
+    // return (
+    //   <ul>
+    //     {[...flowRateRatioMap.values()].map((flowRateRatio, receiver) => {
+    //       // writeAsync({
+    //       //   args: [process.env.NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRateRatio, undefined],
+    //       //   value: parseEther("0"),
+    //       // });
+    //       return <li>{receiver + ":" + flowRateRatio}</li>;
+    //     })}
+    //   </ul>
+    // );
   };
 
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 md:p-8 lg:p-10">
       {repositories.map((repo, index) => (
-        <Card key={index}>
+        <Card key={index} className="h-[36rem] overflow-y-scroll" style={{ scrollbarColor: "#385183 black" }}>
           <CardHeader className="flex items-start justify-between">
             <div className="space-y-1">
-              <CardTitle>{repo.title}</CardTitle>
-              <CardDescription>{repo.description}</CardDescription>
+              <CardTitle className="text-center">{repo.title}</CardTitle>
+              <CardDescription className="break-all">{repo.description}</CardDescription>
             </div>
             <Link className="text-gray-900 hover:underline dark:text-gray-50" href="#">
               View
             </Link>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-5">
               <div className="flex items-center space-x-2">
                 <EthereumIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                <p className="text-sm text-gray-500 dark:text-gray-400">{repo.ethAddress}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 break-all">{repo.ethAddress}</p>
               </div>
               <div className="space-y-1">
-                <h4 className="text-sm font-medium">Distribution Rules</h4>
+                <h4 className="text-sm font-medium text-center">Distribution Rules</h4>
                 <ReactMarkdown className="space-y-1 text-sm text-gray-500 markdown-body dark:text-gray-400">
                   {repo.distributionRulesMD}
                 </ReactMarkdown>
               </div>
               {/* TODO: A inputbox for the total flow rate. */}
+
+              {/* <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
+                <input
+                  value={totalFlowRate}
+                  onChange={e => setTotalFlowRate(e.target.value)}
+                  type="text"
+                  placeholder="Type here total flowRate"
+                  className="!bg-[#385183] grow"
+                />
+                RMUDx/Day
+              </label>
+
               <button
                 onClick={() => createSuperfluidStream(repo.ethAddress, repo.distributionRulesJSON)}
-                className="mt-4 w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
               >
                 Create Stream
-              </button>
+              </button> */}
+              <GithubSuperfluidStream
+                repoAddress={repo.ethAddress}
+                distributionRulesJSON={repo.distributionRulesJSON}
+              />
             </div>
           </CardContent>
         </Card>
