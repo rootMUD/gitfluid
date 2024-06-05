@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { NextPage } from "next";
+import {
+  fetchDistributionOfRepo,
+  fetchRepoAddress,
+  fetchRepos,
+  fetchUserAddressFromBio,
+} from "~~/components/GithubFetcher";
 import { GithubShow } from "~~/components/GithubShow";
-import { fetchRepos, fetchRepoAddress, fetchDistributionOfRepo, fetchUserAddressFromBio } from "~~/components/GithubFetcher"; // Assuming the path is correct
+
+// Assuming the path is correct
 
 const ETHSpace: NextPage = () => {
   const [repositories, setRepositories] = useState([]);
@@ -12,30 +19,32 @@ const ETHSpace: NextPage = () => {
     try {
       const repos = await fetchRepos();
       if (repos && repos.length > 0) {
-        const repoDetails = await Promise.all(repos.map(async repo => {
-          // Fetch additional details for each repository
-          const repoAddress = await fetchRepoAddress(repo.owner, repo.name);
-          const distributionRules = await fetchDistributionOfRepo(repo.owner, repo.name);
-          console.log(repoAddress);
-          console.log(distributionRules);
-          return {
-            title: repo.name,
-            description: repoAddress.bio, 
-            ethAddress: repoAddress.eth_addr,
-            distributionRulesJSON: distributionRules.distribution_rules_json,
-            distributionRulesMD: distributionRules.distribution_rules_md
-          };
-        }));
+        const repoDetails = await Promise.all(
+          repos.map(async (repo: { owner: any; name: any }) => {
+            // Fetch additional details for each repository
+            const repoAddress = await fetchRepoAddress(repo.owner, repo.name);
+            const distributionRules = await fetchDistributionOfRepo(repo.owner, repo.name);
+            console.log(repoAddress);
+            console.log(distributionRules);
+            return {
+              title: repo.name,
+              description: repoAddress.bio,
+              ethAddress: repoAddress.eth_addr,
+              distributionRulesJSON: distributionRules.distribution_rules_json,
+              distributionRulesMD: distributionRules.distribution_rules_md,
+            };
+          }),
+        );
         setRepositories(repoDetails);
       } else {
         console.error("No data returned from the server");
-        setRepositories([]);  // Ensure state is updated even with no data
+        setRepositories([]); // Ensure state is updated even with no data
       }
     } catch (error) {
       console.error("Failed to load repositories:", error);
     }
     setLoading(false);
-  };  
+  };
 
   useEffect(() => {
     loadRepositories();
