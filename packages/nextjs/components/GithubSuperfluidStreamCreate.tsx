@@ -110,7 +110,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="size-6 inline-block"
+              className="size-6 inline-block text-green-500"
             >
               <path
                 fillRule="evenodd"
