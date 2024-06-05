@@ -1,63 +1,10 @@
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { DistributionRulesJSON } from "./GithubShow";
+import { GithubSuperfluidStreamCreate } from "./GithubSuperfluidStreamCreate";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { notification } from "~~/utils/scaffold-eth";
 
-const GithubSuperfluidStreamCreate = forwardRef(
-  ({ receiver, flowRate }: { receiver: string; flowRate: bigint }, ref: any) => {
-    const { address: senderAddress } = useAccount();
-    const [txStatus, setTxStatus] = useState("");
-    const {
-      refetch,
-      isLoading: readLoading,
-      data,
-    } = useScaffoldContractRead({
-      contractName: "CFAv1Forwarder",
-      functionName: "getFlowrate",
-      args: [process.env.NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver],
-    });
-    const { writeAsync, isIdle, isSuccess, isError, isLoading } = useScaffoldContractWrite({
-      contractName: "CFAv1Forwarder",
-      functionName: "createFlow",
-      args: [process.env.NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, "senderAddress", "receiver", 0n, undefined],
-      value: parseEther("0"),
-      onBlockConfirmation: txnReceipt => {
-        console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-      },
-    });
-    useImperativeHandle(ref, () => ({
-      createStream: () => {
-        if (flowRate > 0n) {
-          writeAsync({
-            args: [process.env.NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, undefined],
-            value: parseEther("0"),
-          });
-        }
-      },
-    }));
-    useEffect(() => {
-      refetch();
-    }, [isSuccess]);
-    return (
-      <>
-        <p className="m-0">
-          <span className="text-blue-500">flowRate:</span>
-          {readLoading ? (
-            <span className="loading loading-dots loading-md"></span>
-          ) : (
-            <span> {data === 0n ? "none" : data}</span>
-          )}
-        </p>
-        <p className="m-0">
-          <span className="text-blue-500">tx status:</span>
-          {txStatus}
-        </p>
-      </>
-    );
-  },
-);
-GithubSuperfluidStreamCreate.displayName = "GithubSuperfluidStreamCreate";
 export const GithubSuperfluidStream = ({
   repoAddress,
   distributionRulesJSON,
@@ -66,6 +13,7 @@ export const GithubSuperfluidStream = ({
   distributionRulesJSON: DistributionRulesJSON;
 }) => {
   const [totalFlowRate, setTotalFlowRate] = useState("");
+  const modalRef = useRef<HTMLDialogElement>(null);
   const { address: senderAddress } = useAccount();
   const flowRateRatioRefs = useRef(new Map<string, any>());
   console.log(`Creating superfluid stream for address: ${repoAddress}`);
@@ -94,20 +42,22 @@ export const GithubSuperfluidStream = ({
       flowRateRatioMap.set(repo.addr, { receiverAddress: repo.addr, flowRateRatio: repo.distribution_rate });
     }
   });
-  const createSuperfluidStream = () => {
-    flowRateRatioRefs.current.forEach((ref, receiverAddress) => {
-      ref.createStream();
-      console.log(`create stearm for ${receiverAddress}`);
-    });
-  };
-  const getFlowRateByReceiver = (receiver: string) => {
-    const flowRateRatio = flowRateRatioMap.get(receiver)?.flowRateRatio || 0;
-    if (flowRateRatio && totalFlowRate) {
-      const flowRate = (parseFloat(totalFlowRate) * flowRateRatio) / 100;
-      const totalFlowRateWei = parseEther(flowRate.toString());
-      return totalFlowRateWei / (24n * 60n * 60n);
+  // const createSuperfluidStream = () => {
+  //   flowRateRatioRefs.current.forEach((ref, receiverAddress) => {
+  //     ref.createStream();
+  //     console.log(`create stearm for ${receiverAddress}`);
+  //   });
+  // };
+
+  const openModalToSubmitTx = () => {
+    if (totalFlowRate) {
+      if (totalFlowRate && !isNaN(parseFloat(totalFlowRate))) {
+        modalRef.current && modalRef.current.showModal();
+      } else {
+        notification.error("Please set right type.");
+      }
     } else {
-      return 0n;
+      notification.error("Please set total flow rate.");
     }
   };
 
@@ -127,17 +77,9 @@ export const GithubSuperfluidStream = ({
                 {`${receiverAddress}`}
               </p>
               <p className="m-0">
-                <span className="text-blue-500">flowRateRatio:</span>
+                <span className="text-blue-500">flow rate ratio:</span>
                 {`${flowRateRatio}`}
               </p>
-
-              <GithubSuperfluidStreamCreate
-                ref={ref => {
-                  flowRateRatioRefs.current.set(receiverAddress, ref);
-                }}
-                receiver={receiverAddress}
-                flowRate={getFlowRateByReceiver(receiverAddress)}
-              />
             </li>
           );
         })}
@@ -148,17 +90,60 @@ export const GithubSuperfluidStream = ({
           value={totalFlowRate}
           onChange={e => setTotalFlowRate(e.target.value)}
           type="text"
-          placeholder="Type here total flowRate"
+          placeholder="Type here total flow rate"
           className="!bg-[#385183] grow"
         />
         RMUDx/Day
       </label>
       <button
-        onClick={() => createSuperfluidStream()}
+        onClick={openModalToSubmitTx}
         className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
       >
         Create Stream
       </button>
+      <dialog ref={modalRef} className="modal">
+        <div className="modal-box overflow-y-scroll">
+          <form method="dialog">
+            {/* if there is a button in form, it will close the modal */}
+            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+          </form>
+          <h3 className="font-bold text-center text-lg">Create Stream</h3>
+          <p className="m-0">total flow rate:</p>
+          <p className="mt-0">
+            {((isNaN(parseFloat(totalFlowRate)) ? 0n : parseEther(totalFlowRate)) / (24n * 60n * 60n)).toString() +
+              "wei RMUDx/s"}
+          </p>
+
+          <ul className="break-all list-none space-y-5">
+            {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
+              return (
+                <li className="bg-base-300 p-5 rounded-box" key={index}>
+                  <p className="m-0">
+                    <span className="text-blue-500">{`receiver${index + 1}:`}</span>
+                    {`${receiverAddress}`}
+                  </p>
+                  <p className="m-0">
+                    <span className="text-blue-500">flow rate ratio:</span>
+                    {`${flowRateRatio}`}
+                  </p>
+
+                  <GithubSuperfluidStreamCreate
+                    ref={ref => {
+                      flowRateRatioRefs.current.set(receiverAddress, ref);
+                    }}
+                    receiver={receiverAddress}
+                    totalFlowRate={totalFlowRate}
+                    flowRateRatio={flowRateRatio}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+        <form method="dialog" className="modal-backdrop">
+          <button>close</button>
+        </form>
+      </dialog>
     </>
   );
 };
