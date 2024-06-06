@@ -126,6 +126,14 @@ export const GithubSuperfluidStream = ({
   };
 
   const openModalToSubmitTx = () => {
+    if (senderAddress !== repoAddress) {
+      return notification.error(
+        `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
+          repoAddress.length - 4,
+          repoAddress.length,
+        )} can create stream.`,
+      );
+    }
     if (totalFlowRate) {
       if (totalFlowRate && !isNaN(parseFloat(totalFlowRate))) {
         modalRef.current && modalRef.current.showModal();
