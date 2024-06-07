@@ -1,21 +1,80 @@
-import { useRef, useState } from "react";
+import { JSX, SVGProps, useEffect, useRef, useState } from "react";
 import { DistributionRulesJSON } from "./GithubShow";
-import { GithubSuperfluidStreamCreate } from "./GithubSuperfluidStreamCreate";
+import { GithubSuperfluidStreamCreate, SuccessIcon } from "./GithubSuperfluidStreamCreate";
+import "github-markdown-css";
+import ReactMarkdown from "react-markdown";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
+import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
 export const GithubSuperfluidStream = ({
   repoAddress,
   distributionRulesJSON,
+  distributionRulesMD,
 }: {
   repoAddress: string;
   distributionRulesJSON: DistributionRulesJSON;
+  distributionRulesMD: string;
 }) => {
+  const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
   const [totalFlowRate, setTotalFlowRate] = useState("");
+  const [donateFlowRateInput, setDonateFlowRateInput] = useState("");
+  const [donateFlowRate, setDonateFlowRate] = useState(0n);
   const modalRef = useRef<HTMLDialogElement>(null);
   const { address: senderAddress } = useAccount();
   const flowRateRatioRefs = useRef(new Map<string, any>());
+  const {
+    writeAsync,
+    isIdle: isCreateFlowIdle,
+    isSuccess: isCreateFlowSuccess,
+    isLoading: isCreateFlowLoading,
+  } = useScaffoldContractWrite({
+    contractName: "CFAv1Forwarder",
+    functionName: "createFlow",
+    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, 0n, "0x0"],
+    value: parseEther("0"),
+    onBlockConfirmation: txnReceipt => {
+      console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+    },
+  });
+  const {
+    writeAsync: removeStreamWriteAsync,
+    isIdle: isRemoveFlowIdle,
+    isSuccess: isRemoveFlowSuccess,
+    isLoading: isRemoveFlowLoading,
+  } = useScaffoldContractWrite({
+    contractName: "CFAv1Forwarder",
+    functionName: "deleteFlow",
+    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
+    value: parseEther("0"),
+    onBlockConfirmation: txnReceipt => {
+      console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+    },
+  });
+  const {
+    refetch,
+    isFetching: readLoading,
+    data: flowRateReadData,
+  } = useScaffoldContractRead({
+    contractName: "CFAv1Forwarder",
+    functionName: "getFlowrate",
+    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress],
+  });
+  useEffect(() => {
+    refetch();
+  }, [isCreateFlowSuccess, isRemoveFlowSuccess]);
+  useEffect(() => {
+    if (donateFlowRateInput && !isNaN(parseFloat(donateFlowRateInput))) {
+      const flowRateNumber = parseFloat(donateFlowRateInput);
+      const donateFlowRateWei = parseEther(flowRateNumber.toString());
+      const flowRate = donateFlowRateWei / (24n * 60n * 60n);
+      setDonateFlowRate(flowRate);
+      console.log(`flowRate for ${repoAddress}: ${flowRate}`);
+    } else {
+      setDonateFlowRate(0n);
+    }
+  }, [donateFlowRateInput]);
   console.log(`Creating superfluid stream for address: ${repoAddress}`);
   console.log(`Creating superfluid stream based on rules: ${JSON.stringify(distributionRulesJSON)}`);
   const flowRateRatioMap = new Map<string, { receiverAddress: string; flowRateRatio: number }>();
@@ -49,7 +108,32 @@ export const GithubSuperfluidStream = ({
   //   });
   // };
 
+  const createDonateSuperfluidStream = () => {
+    if (donateFlowRate > 0n) {
+      console.log(`create stearm from ${senderAddress} to ${repoAddress}`, `flowRate: ${donateFlowRate}`);
+      writeAsync({
+        args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, donateFlowRate, "0x0"],
+        value: parseEther("0"),
+      });
+    }
+  };
+  const removeDonateSuperfluidStream = () => {
+    console.log(`remove stearm from ${senderAddress} to ${repoAddress}`);
+    removeStreamWriteAsync({
+      args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
+      value: parseEther("0"),
+    });
+  };
+
   const openModalToSubmitTx = () => {
+    if (senderAddress !== repoAddress) {
+      return notification.error(
+        `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
+          repoAddress.length - 4,
+          repoAddress.length,
+        )} can create stream.`,
+      );
+    }
     if (totalFlowRate) {
       if (totalFlowRate && !isNaN(parseFloat(totalFlowRate))) {
         modalRef.current && modalRef.current.showModal();
@@ -62,7 +146,67 @@ export const GithubSuperfluidStream = ({
   };
 
   return (
-    <>
+    <div className="space-y-5">
+      <div className="flex items-center space-x-2">
+        <EthereumIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+        <p className="m-0 text-sm text-gray-500 dark:text-gray-400 break-all">{repoAddress}</p>
+      </div>
+      <p className="m-0">
+        <span className="text-blue-500">current donate flow rate:</span>
+        {readLoading ? (
+          <div className="flex justify-center items-center">
+            <span className="loading loading-dots loading-md text-center"></span>
+          </div>
+        ) : (
+          <span className="block text-center ">
+            {flowRateReadData === 0n ? "0 wei RMUDx/s" : flowRateReadData?.toString() + "wei RMUDx/s"}
+          </span>
+        )}
+      </p>
+
+      {flowRateReadData === 0n && (
+        <p className="m-0">
+          <span className="text-blue-500">flowRate want to donate:</span>
+          <span className="block text-center">{donateFlowRate.toString() + "wei RMUDx/s"}</span>
+        </p>
+      )}
+      <p className="m-0 flex">
+        <span className="text-blue-500">tx pedding status:</span>
+        {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowLoading || isCreateFlowLoading) && (
+          <span className="loading loading-dots loading-md"></span>
+        )}
+        {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowSuccess || isCreateFlowSuccess) && <SuccessIcon />}
+      </p>
+      <div className="flex items-center justify-center">
+        {flowRateReadData === 0n && (
+          <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+            <input
+              value={donateFlowRateInput}
+              onChange={e => setDonateFlowRateInput(e.target.value)}
+              type="text"
+              placeholder="flow rate"
+              className="!bg-[#385183] grow w-[6rem]"
+            />
+            RMUDx/Day
+          </label>
+        )}
+        {flowRateReadData === 0n ? (
+          <button onClick={createDonateSuperfluidStream} className="btn btn-success btn-outline ml-2">
+            Donate
+          </button>
+        ) : (
+          <button onClick={removeDonateSuperfluidStream} className="btn btn-success btn-outline ml-2">
+            reomve Donate
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        <h4 className="text-sm font-medium text-center">Distribution Rules</h4>
+        <ReactMarkdown className="space-y-1 text-sm text-gray-500 markdown-body dark:text-gray-400">
+          {distributionRulesMD}
+        </ReactMarkdown>
+      </div>
       <h1 className="text-center">Stream Info</h1>
       <p className="m-0 break-all">
         <span className="text-blue-500">sender:</span>
@@ -144,6 +288,14 @@ export const GithubSuperfluidStream = ({
           <button>close</button>
         </form>
       </dialog>
-    </>
+    </div>
   );
 };
+
+function EthereumIcon(props: JSX.IntrinsicAttributes & SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...props} viewBox="0 0 320 512" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+      <path d="M311.9 199.9l-143.9-84c-2.5-1.5-5.7-1.5-8.3 0l-144 84c-3 1.8-3.9 5.8-2.1 8.8s5.8 3.9 8.8 2.1l135.2-79.1 135.2 79.1c1.4.8 3 1.3 4.6 1.3 2.3 0 4.5-1 6.1-2.9 1.8-3 1-7-2-8.8zM16 227.6l136 79.5v158.7c0 2.7 1.4 5.2 3.8 6.5 1.3 .8 2.7 1.1 4.1 1.1 1.7 0 3.3-.5 4.7-1.4l127.9-75.2v-149.7l-136-79.5c-3-1.8-7-.7-8.8 2.2-1.8 3-.7 7 2.2 8.8l119.6 70V371.1l-111.9 65.7V297.2c0-2.7-1.4-5.2-3.8-6.5-2.4-1.3-5.4-1.1-7.6 .5l-119.6 70V236.3c-.1-2.6-1.5-5-3.9-6.4-2.4-1.4-5.4-1.4-7.9 .2z" />
+    </svg>
+  );
+}
