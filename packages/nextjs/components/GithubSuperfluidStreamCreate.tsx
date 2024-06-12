@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 export const GithubSuperfluidStreamCreate = forwardRef(
   (
@@ -25,54 +25,54 @@ export const GithubSuperfluidStreamCreate = forwardRef(
       refetch,
       isFetching: readLoading,
       data: flowRateReadData,
-    } = useScaffoldContractRead({
+    } = useScaffoldReadContract({
       contractName: "CFAv1Forwarder",
       functionName: "getFlowrate",
       args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver],
     });
     const {
-      writeAsync,
+      writeContractAsync: createStreamWriteAsync,
       isIdle: isCreateFlowIdle,
       isSuccess: isCreateFlowSuccess,
-      isLoading: isCreateFlowLoading,
-    } = useScaffoldContractWrite({
-      contractName: "CFAv1Forwarder",
-      functionName: "createFlow",
-      args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, 0n, "0x0"],
-      value: parseEther("0"),
-      onBlockConfirmation: txnReceipt => {
-        console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-      },
-    });
+      isPending: isCreateFlowLoading,
+    } = useScaffoldWriteContract("CFAv1Forwarder");
     const {
-      writeAsync: removeStreamWriteAsync,
+      writeContractAsync: removeStreamWriteAsync,
       isIdle: isRemoveFlowIdle,
       isSuccess: isRemoveFlowSuccess,
-      isLoading: isRemoveFlowLoading,
-    } = useScaffoldContractWrite({
-      contractName: "CFAv1Forwarder",
-      functionName: "deleteFlow",
-      args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
-      value: parseEther("0"),
-      onBlockConfirmation: txnReceipt => {
-        console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-      },
-    });
+      isPending: isRemoveFlowLoading,
+    } = useScaffoldWriteContract("CFAv1Forwarder");
     const createStream = () => {
       if (flowRate > 0n) {
         console.log(`create stearm from ${senderAddress} to ${receiver}`, `flowRate: ${flowRate}`);
-        writeAsync({
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, "0x0"],
-          value: parseEther("0"),
-        });
+        createStreamWriteAsync(
+          {
+            functionName: "createFlow",
+            args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, "0x0"],
+            value: parseEther("0"),
+          },
+          {
+            onBlockConfirmation: txnReceipt => {
+              console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+            },
+          },
+        );
       }
     };
     const removeStream = () => {
       console.log(`remove stearm from ${senderAddress} to ${receiver}`);
-      removeStreamWriteAsync({
-        args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
-        value: parseEther("0"),
-      });
+      removeStreamWriteAsync(
+        {
+          functionName: "deleteFlow",
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
+          value: parseEther("0"),
+        },
+        {
+          onBlockConfirmation: txnReceipt => {
+            console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          },
+        },
+      );
     };
     useImperativeHandle(ref, () => ({
       createStream,
@@ -86,9 +86,9 @@ export const GithubSuperfluidStreamCreate = forwardRef(
         <p className="m-0">
           <span className="text-blue-500">current flow rate:</span>
           {readLoading ? (
-            <div className="flex justify-center items-center">
+            <span className="flex justify-center items-center">
               <span className="loading loading-dots loading-md text-center"></span>
-            </div>
+            </span>
           ) : (
             <span className="block text-center ">
               {" "}
