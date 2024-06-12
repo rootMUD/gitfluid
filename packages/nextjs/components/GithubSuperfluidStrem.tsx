@@ -1,11 +1,12 @@
 import { JSX, SVGProps, useEffect, useRef, useState } from "react";
 import { DistributionRulesJSON } from "./GithubShow";
 import { GithubSuperfluidStreamCreate, SuccessIcon } from "./GithubSuperfluidStreamCreate";
+import { RainbowKitCustomConnectButton } from "./scaffold-eth";
 import "github-markdown-css";
 import ReactMarkdown from "react-markdown";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldContractRead, useScaffoldContractWrite } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
 export const GithubSuperfluidStream = ({
@@ -25,42 +26,27 @@ export const GithubSuperfluidStream = ({
   const { address: senderAddress } = useAccount();
   const flowRateRatioRefs = useRef(new Map<string, any>());
   const {
-    writeAsync,
+    writeContractAsync: CreateFlowWriteAsync,
     isIdle: isCreateFlowIdle,
     isSuccess: isCreateFlowSuccess,
-    isLoading: isCreateFlowLoading,
-  } = useScaffoldContractWrite({
-    contractName: "CFAv1Forwarder",
-    functionName: "createFlow",
-    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, 0n, "0x0"],
-    value: parseEther("0"),
-    onBlockConfirmation: txnReceipt => {
-      console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-    },
-  });
+    isPending: isCreateFlowLoading,
+  } = useScaffoldWriteContract("CFAv1Forwarder");
   const {
-    writeAsync: removeStreamWriteAsync,
+    writeContractAsync: removeStreamWriteAsync,
     isIdle: isRemoveFlowIdle,
     isSuccess: isRemoveFlowSuccess,
-    isLoading: isRemoveFlowLoading,
-  } = useScaffoldContractWrite({
-    contractName: "CFAv1Forwarder",
-    functionName: "deleteFlow",
-    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
-    value: parseEther("0"),
-    onBlockConfirmation: txnReceipt => {
-      console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-    },
-  });
+    isPending: isRemoveFlowLoading,
+  } = useScaffoldWriteContract("CFAv1Forwarder");
   const {
     refetch,
     isFetching: readLoading,
     data: flowRateReadData,
-  } = useScaffoldContractRead({
+  } = useScaffoldReadContract({
     contractName: "CFAv1Forwarder",
     functionName: "getFlowrate",
     args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress],
   });
+  console.log(`flowRateReadData: ${flowRateReadData}`);
   useEffect(() => {
     refetch();
   }, [isCreateFlowSuccess, isRemoveFlowSuccess]);
@@ -109,20 +95,42 @@ export const GithubSuperfluidStream = ({
   // };
 
   const createDonateSuperfluidStream = () => {
+    if (senderAddress == repoAddress) {
+      return notification.error(`you are the repo owner, can not donate stream.`);
+    }
+
     if (donateFlowRate > 0n) {
       console.log(`create stearm from ${senderAddress} to ${repoAddress}`, `flowRate: ${donateFlowRate}`);
-      writeAsync({
-        args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, donateFlowRate, "0x0"],
-        value: parseEther("0"),
-      });
+      CreateFlowWriteAsync(
+        {
+          functionName: "createFlow",
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, donateFlowRate, "0x0"],
+        },
+        {
+          onBlockConfirmation: txnReceipt => {
+            refetch();
+            console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          },
+        },
+      );
+    } else {
+      notification.error("Please set right donate flow rate.");
     }
   };
   const removeDonateSuperfluidStream = () => {
     console.log(`remove stearm from ${senderAddress} to ${repoAddress}`);
-    removeStreamWriteAsync({
-      args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
-      value: parseEther("0"),
-    });
+    removeStreamWriteAsync(
+      {
+        functionName: "deleteFlow",
+        args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
+      },
+      {
+        onBlockConfirmation: txnReceipt => {
+          refetch();
+          console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+        },
+      },
+    );
   };
 
   const openModalToSubmitTx = () => {
@@ -154,12 +162,13 @@ export const GithubSuperfluidStream = ({
       <p className="m-0">
         <span className="text-blue-500">current donate flow rate:</span>
         {readLoading ? (
-          <div className="flex justify-center items-center">
+          <span className="flex justify-center items-center">
             <span className="loading loading-dots loading-md text-center"></span>
-          </div>
+          </span>
         ) : (
           <span className="block text-center ">
-            {flowRateReadData === 0n ? "0 wei RMUDx/s" : flowRateReadData?.toString() + "wei RMUDx/s"}
+            {flowRateReadData === 0n && "0 wei RMUDx/s"}
+            {flowRateReadData && flowRateReadData > 0n ? flowRateReadData.toString() + "wei RMUDx/s" : "unknow"}
           </span>
         )}
       </p>
@@ -190,14 +199,25 @@ export const GithubSuperfluidStream = ({
             RMUDx/Day
           </label>
         )}
-        {flowRateReadData === 0n ? (
-          <button onClick={createDonateSuperfluidStream} className="btn btn-success btn-outline ml-2">
+        {flowRateReadData === 0n && (
+          <button
+            disabled={isCreateFlowLoading}
+            onClick={createDonateSuperfluidStream}
+            className="btn btn-success btn-outline ml-2"
+          >
             Donate
           </button>
-        ) : (
-          <button onClick={removeDonateSuperfluidStream} className="btn btn-success btn-outline ml-2">
+        )}
+        {flowRateReadData && flowRateReadData > 0n ? (
+          <button
+            disabled={isRemoveFlowLoading}
+            onClick={removeDonateSuperfluidStream}
+            className="btn btn-success btn-outline ml-2"
+          >
             reomve Donate
           </button>
+        ) : (
+          !senderAddress && <RainbowKitCustomConnectButton />
         )}
       </div>
 
@@ -229,22 +249,26 @@ export const GithubSuperfluidStream = ({
         })}
       </ul>
 
-      <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
-        <input
-          value={totalFlowRate}
-          onChange={e => setTotalFlowRate(e.target.value)}
-          type="text"
-          placeholder="Type here total flow rate"
-          className="!bg-[#385183] grow"
-        />
-        RMUDx/Day
-      </label>
-      <button
-        onClick={openModalToSubmitTx}
-        className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-      >
-        Create Stream
-      </button>
+      {senderAddress && (
+        <>
+          <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
+            <input
+              value={totalFlowRate}
+              onChange={e => setTotalFlowRate(e.target.value)}
+              type="text"
+              placeholder="Type here total flow rate"
+              className="!bg-[#385183] grow"
+            />
+            RMUDx/Day
+          </label>
+          <button
+            onClick={openModalToSubmitTx}
+            className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          >
+            Create Stream
+          </button>
+        </>
+      )}
       <dialog ref={modalRef} className="modal">
         <div className="modal-box overflow-y-scroll">
           <form method="dialog">
