@@ -1,5 +1,8 @@
 import Link from "next/link";
-import { GithubSuperfluidStream } from "./GithubSuperfluidStrem";
+import { GithubSuperfluid } from "./GithubSuperfliud";
+import { EthereumCircleColorful } from "@ant-design/web3-icons";
+import "github-markdown-css";
+import ReactMarkdown from "react-markdown";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/components/ui/card";
 
 // Props type definition (optional but recommended for TypeScript)
@@ -21,7 +24,7 @@ export interface DistributionRulesJSON {
   relatedRepos: Array<RepoDetail>;
 }
 
-interface Repo {
+export interface Repo {
   title: string;
   description: string;
   ethAddress: string;
@@ -40,19 +43,25 @@ export function GithubShow({ repositories }: GithubShowProps) {
         <Card key={index} className="h-[36rem] overflow-y-scroll" style={{ scrollbarColor: "#385183 black" }}>
           <CardHeader className="flex items-start justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-center">{repo.title}</CardTitle>
+              <CardTitle className="text-center uppercase">{repo.title}</CardTitle>
               <CardDescription className="break-all">{repo.description}</CardDescription>
             </div>
-            <Link className="text-gray-900 hover:underline dark:text-gray-50" href="#">
+            <Link className="text-gray-900 self-center hover:underline dark:text-gray-50" href="#">
               View
             </Link>
           </CardHeader>
           <CardContent className="p-5 pt-0">
-            <GithubSuperfluidStream
-              repoAddress={repo.ethAddress}
-              distributionRulesJSON={repo.distributionRulesJSON}
-              distributionRulesMD={repo.distributionRulesMD}
-            />
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <EthereumCircleColorful />
+                <p className="m-0 text-sm text-gray-500 dark:text-gray-400 break-all">{repo.ethAddress}</p>
+              </div>
+              <h4 className="text-sm font-medium text-center !my-3">Distribution Rules</h4>
+              <ReactMarkdown className="!space-y-1 !text-sm !text-gray-500 markdown-body dark:!text-gray-400 !bg-gray-300 dark:!bg-gray-800 rounded-box">
+                {repo.distributionRulesMD}
+              </ReactMarkdown>
+            </div>
+            <GithubSuperfluid repo={repo} />
           </CardContent>
         </Card>
       ))}
