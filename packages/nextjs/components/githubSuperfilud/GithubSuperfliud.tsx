@@ -1,13 +1,14 @@
 import { useState } from "react";
+import { RainbowKitCustomConnectButton } from "../scaffold-eth";
 import { Repo } from "./GithubShow";
 import { GithubSuperfluidPool } from "./GithubSuperfliudPool";
-import { GithubSuperfluidStream } from "./GithubSuperfluidStrem";
-import { RainbowKitCustomConnectButton } from "./scaffold-eth";
+import { GithubSuperfluidStream } from "./GithubSuperfluidStream";
+import { clsx } from "clsx";
 import { useAccount } from "wagmi";
 
 enum DISTRIBUTION_MODE {
-  STREAM_MODE = "stream",
-  POOL_MODE = "pool",
+  STREAM_MODE = "Stream Mode",
+  POOL_MODE = "Pool Mode",
 }
 export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
   const { address: connectedWallet } = useAccount();
@@ -43,7 +44,7 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
     return flowRateRatioMap;
   };
   const flowRateRatioMap = getFlowRateRatioMap(repo);
-
+  const MODE_TABS = [DISTRIBUTION_MODE.POOL_MODE, DISTRIBUTION_MODE.STREAM_MODE];
   return (
     <>
       {/* Not connected to wallet yet */}
@@ -54,18 +55,21 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
       )}
       {/* Connected to wallet */}
       {connectedWallet && (
-        <div className="flex justify-start items-center my-5">
-          <div className="badge badge-lg badge-primary mr-5">
-            {distrbutionMode === DISTRIBUTION_MODE.STREAM_MODE ? "Stream Mode" : "Pool Mode"}
-          </div>
-          <input
-            onChange={e =>
-              setDistrbutionMode(e.target.checked ? DISTRIBUTION_MODE.STREAM_MODE : DISTRIBUTION_MODE.POOL_MODE)
-            }
-            checked={distrbutionMode === DISTRIBUTION_MODE.STREAM_MODE}
-            type="checkbox"
-            className="toggle dark:[--tglbg:#212638] bg-blue-500 hover:bg-blue-700 border-blue-500"
-          />
+        <div role="tablist" className="mt-5 tabs tabs-boxed">
+          {MODE_TABS.map((mode, index) => {
+            return (
+              <button
+                onClick={() => {
+                  setDistrbutionMode(mode);
+                }}
+                role="tab"
+                key={index}
+                className={clsx("tab", { "tab-active": mode === distrbutionMode })}
+              >
+                {mode}
+              </button>
+            );
+          })}
         </div>
       )}
       {connectedWallet && distrbutionMode === DISTRIBUTION_MODE.STREAM_MODE && (

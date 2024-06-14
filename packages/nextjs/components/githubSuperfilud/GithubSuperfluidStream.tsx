@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { DistributionRulesJSON } from "./GithubShow";
-import { GithubSuperfluidStreamCreate, SuccessIcon } from "./GithubSuperfluidStreamCreate";
+import { GithubSuperfluidStreamCreate } from "./GithubSuperfluidStreamCreate";
 import "github-markdown-css";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
@@ -194,7 +193,7 @@ export const GithubSuperfluidStream = ({
         </>
       )}
       {/* create stream */}
-      {senderAddress && senderAddress === repoAddress && (
+      {senderAddress && senderAddress !== repoAddress && (
         <>
           <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
             <input
