@@ -193,25 +193,27 @@ export const GithubSuperfluidPool = ({
             )}
           </div>
         )}
-        <div className="flex items-center justify-center">
-          <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
-            <input
-              value={distributeFlowRateInput}
-              onChange={e => setDistributeFlowRateInput(e.target.value)}
-              type="text"
-              placeholder="Type Flow Rate"
-              className="!bg-[#385183] grow w-[6rem]"
-            />
-            RMUDx/Day
-          </label>
-          <button
-            disabled={isDistributePoolLoading}
-            onClick={distributeFlow}
-            className="btn btn-success btn-outline ml-2"
-          >
-            Distribute
-          </button>
-        </div>
+        {!getCreatedPoolsInfoLoading && poolAdderess && (
+          <div className="flex items-center justify-center">
+            <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+              <input
+                value={distributeFlowRateInput}
+                onChange={e => setDistributeFlowRateInput(e.target.value)}
+                type="text"
+                placeholder="Type Flow Rate"
+                className="!bg-[#385183] grow w-[6rem]"
+              />
+              RMUDx/Day
+            </label>
+            <button
+              disabled={isDistributePoolLoading}
+              onClick={distributeFlow}
+              className="btn btn-success btn-outline ml-2"
+            >
+              Distribute
+            </button>
+          </div>
+        )}
         {senderAddress &&
           [...flowRateRatioMap.keys()].includes(senderAddress) &&
           (isConnectReadData ? (
@@ -225,16 +227,17 @@ export const GithubSuperfluidPool = ({
           ))}
 
         {/* member unit */}
-        {repoAddress === senderAddress && (
-          <>
+        {repoAddress === senderAddress &&
+          !getCreatedPoolsInfoLoading &&
+          (poolAdderess ? (
             <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
               Update Member Units
             </button>
+          ) : (
             <button className="w-full flex mx-auto btn btn-accent" onClick={createPool}>
               Create Pool
             </button>
-          </>
-        )}
+          ))}
       </div>
       <dialog ref={modalRef} className="modal">
         <div className="modal-box overflow-y-scroll">
