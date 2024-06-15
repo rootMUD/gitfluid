@@ -3,11 +3,11 @@ import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 export const GithubSuperfluidPoolMemberUnitUpdate = ({
   receiver,
   flowRateRatio,
-  poolAdderess,
+  poolAddress,
 }: {
   receiver: string;
   flowRateRatio: number;
-  poolAdderess: string;
+  poolAddress: string;
 }) => {
   const {
     writeContractAsync: updateMemberUnitsWriteAsync,
@@ -19,7 +19,7 @@ export const GithubSuperfluidPoolMemberUnitUpdate = ({
     updateMemberUnitsWriteAsync(
       {
         functionName: "updateMemberUnits",
-        args: [poolAdderess, receiver, BigInt(flowRateRatio * 100), "0x0"],
+        args: [poolAddress, receiver, BigInt(flowRateRatio * 100), "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {

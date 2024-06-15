@@ -30,7 +30,7 @@ export const GithubSuperfluidPool = ({
   const { address: senderAddress } = useAccount();
   const [distributeFlowRateInput, setDistributeFlowRateInput] = useState("");
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
-  const [poolAdderess, setPoolAdderess] = useState("");
+  const [poolAddress, setPoolAddress] = useState("");
   const {
     writeContractAsync: createPoolWriteAsync,
     isSuccess: isCreatePoolSuccess,
@@ -59,7 +59,7 @@ export const GithubSuperfluidPool = ({
   } = useScaffoldReadContract({
     contractName: "GDAv1Forwarder",
     functionName: "isMemberConnected",
-    args: [poolAdderess, senderAddress],
+    args: [poolAddress, senderAddress],
   });
   const GET_POOL_CREATED = gql`
     query MyQuery {
@@ -101,6 +101,10 @@ export const GithubSuperfluidPool = ({
       {
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          const createdPoolAddress = txnReceipt.logs.find(log => log.address === senderAddress)?.data;
+          if (!poolAddress && createdPoolAddress) {
+            setPoolAddress(createdPoolAddress as string);
+          }
         },
       },
     );
@@ -124,7 +128,7 @@ export const GithubSuperfluidPool = ({
     disconnectPoolWriteAsync(
       {
         functionName: "disconnectPool",
-        args: [poolAdderess, "0x0"],
+        args: [poolAddress, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {
@@ -139,7 +143,7 @@ export const GithubSuperfluidPool = ({
       distributeWriteAsync(
         {
           functionName: "distributeFlow",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, poolAdderess, distributeFlowRate, "0x0"],
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, poolAddress, distributeFlowRate, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -170,7 +174,7 @@ export const GithubSuperfluidPool = ({
 
   useEffect(() => {
     if (createdPoolsInfo && createdPoolsInfo.pools && createdPoolsInfo.pools.length) {
-      setPoolAdderess(createdPoolsInfo.pools[0]?.id);
+      setPoolAddress(createdPoolsInfo.pools[0]?.id);
     }
   }, [createdPoolsInfo]);
 
@@ -178,22 +182,22 @@ export const GithubSuperfluidPool = ({
     if (senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress)) {
       refetch();
     }
-  }, [poolAdderess, senderAddress]);
+  }, [poolAddress, senderAddress]);
   return (
     <>
       <div className="mt-5 space-y-5">
         {getCreatedPoolsInfoLoading && <div>Loading...</div>}
         {isConnectReadLoading && <div>Get connect pool status loading...</div>}
-        {createdPoolsInfo && createdPoolsInfo.pools && createdPoolsInfo.pools.length && (
+        {poolAddress && (
           <div>
             <h3>Created Pool Address:</h3>
-            <p className="break-all">{createdPoolsInfo.pools[0]?.id}</p>
+            <p className="break-all">{poolAddress}</p>
             {senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress) && (
               <p> Current account connected:{isConnectReadData ? "true" : "false"}</p>
             )}
           </div>
         )}
-        {!getCreatedPoolsInfoLoading && poolAdderess && (
+        {!getCreatedPoolsInfoLoading && poolAddress && (
           <div className="flex items-center justify-center">
             <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
               <input
@@ -229,7 +233,7 @@ export const GithubSuperfluidPool = ({
         {/* member unit */}
         {repoAddress === senderAddress &&
           !getCreatedPoolsInfoLoading &&
-          (poolAdderess ? (
+          (poolAddress ? (
             <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
               Update Member Units
             </button>
@@ -251,7 +255,7 @@ export const GithubSuperfluidPool = ({
               return (
                 <li className="bg-base-300 p-5 rounded-box" key={index}>
                   <GithubSuperfluidPoolMemberUnitUpdate
-                    poolAdderess={poolAdderess}
+                    poolAddress={poolAddress}
                     receiver={receiverAddress}
                     flowRateRatio={flowRateRatio}
                   />
