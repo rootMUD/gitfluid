@@ -326,7 +326,7 @@ const externalContracts = {
           ],
           name: "createPool",
           outputs: [
-            { internalType: "bool", name: "success", type: "bool" },
+            // { internalType: "bool", name: "success", type: "bool" },
             {
               internalType: "contract ISuperfluidPool",
               name: "pool",

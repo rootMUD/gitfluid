@@ -3,7 +3,9 @@ import { GithubSuperfluidPoolMemberUnitUpdate } from "./GithubSuperfliudPoolMemb
 import { gql, useQuery } from "@apollo/client";
 import "github-markdown-css";
 import { parseEther } from "viem";
+import { decodeFunctionResult } from "viem";
 import { useAccount } from "wagmi";
+import contractABI from "~~/contracts/externalContracts";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
@@ -101,8 +103,15 @@ export const GithubSuperfluidPool = ({
       {
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
-          const createdPoolAddress = txnReceipt.logs.find(log => log.address === senderAddress)?.data;
-          if (!poolAddress && createdPoolAddress) {
+          const createdPoolAddressData = txnReceipt.logs.find(
+            log => log.topics[0] === "0x9c5d829b9b23efc461f9aeef91979ec04bb903feb3bee4f26d22114abfc7335b",
+          )?.data;
+          if (!poolAddress && createdPoolAddressData) {
+            const createdPoolAddress = decodeFunctionResult({
+              abi: contractABI[10].GDAv1Forwarder.abi,
+              functionName: "createPool",
+              data: createdPoolAddressData,
+            });
             setPoolAddress(createdPoolAddress as string);
           }
         },
