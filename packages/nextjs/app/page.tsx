@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import type { NextPage } from "next";
 import { fetchDistributionOfRepo, fetchRepoAddress, fetchRepos } from "~~/components/GithubFetcher";
-import { GithubShow } from "~~/components/GithubShow";
+import { GithubShow } from "~~/components/githubSuperfilud/GithubShow";
 
 const Home: NextPage = () => {
   const [repositories, setRepositories] = useState([]);
@@ -44,7 +45,10 @@ const Home: NextPage = () => {
   useEffect(() => {
     loadRepositories();
   }, []);
-
+  const client = new ApolloClient({
+    uri: "https://optimism-mainnet.subgraph.x.superfluid.dev",
+    cache: new InMemoryCache(),
+  });
   return (
     <>
       {loading ? (
@@ -52,7 +56,9 @@ const Home: NextPage = () => {
           Loading<span className="loading loading-dots loading-xs"></span>
         </div>
       ) : (
-        <GithubShow repositories={repositories} />
+        <ApolloProvider client={client}>
+          <GithubShow repositories={repositories} />
+        </ApolloProvider>
       )}
     </>
   );
