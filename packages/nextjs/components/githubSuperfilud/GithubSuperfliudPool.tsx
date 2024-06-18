@@ -199,7 +199,7 @@ export const GithubSuperfluidPool = ({
         {isConnectReadLoading && <div>Get connect pool status loading...</div>}
         {poolAddress && (
           <div>
-            <h3>Created Pool Address:</h3>
+            <h3 className="text-blue-500">Created Pool Address:</h3>
             <p className="break-all">{poolAddress}</p>
             {senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress) && (
               <p> Current account connected:{isConnectReadData ? "true" : "false"}</p>
@@ -208,13 +208,13 @@ export const GithubSuperfluidPool = ({
         )}
         {!getCreatedPoolsInfoLoading && poolAddress && (
           <div className="flex items-center justify-center">
-            <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+            <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
               <input
                 value={distributeFlowRateInput}
                 onChange={e => setDistributeFlowRateInput(e.target.value)}
                 type="text"
                 placeholder="Type Flow Rate"
-                className="!bg-[#385183] grow w-[6rem]"
+                className="dark:!bg-[#385183] grow w-[6rem]"
               />
               RMUDx/Day
             </label>

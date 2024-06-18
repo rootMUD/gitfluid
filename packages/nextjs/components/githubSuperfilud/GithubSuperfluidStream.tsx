@@ -161,13 +161,13 @@ export const GithubSuperfluidStream = ({
           <div className="flex items-center justify-center">
             {flowRateReadData === 0n && (
               <>
-                <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
                   <input
                     value={donateFlowRateInput}
                     onChange={e => setDonateFlowRateInput(e.target.value)}
                     type="text"
                     placeholder="Type Flow Rate"
-                    className="!bg-[#385183] grow w-[6rem]"
+                    className="dark:!bg-[#385183] grow w-[6rem]"
                   />
                   RMUDx/Day
                 </label>
@@ -195,13 +195,13 @@ export const GithubSuperfluidStream = ({
       {/* create stream */}
       {senderAddress && senderAddress !== repoAddress && (
         <>
-          <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
+          <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
             <input
               value={totalFlowRate}
               onChange={e => setTotalFlowRate(e.target.value)}
               type="text"
               placeholder="Type here total flow rate"
-              className="!bg-[#385183] grow"
+              className="dark:!bg-[#385183] grow"
             />
             RMUDx/Day
           </label>
