@@ -33,6 +33,9 @@ export const GithubSuperfluidPool = ({
   const [distributeFlowRateInput, setDistributeFlowRateInput] = useState("");
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
   const [poolAddress, setPoolAddress] = useState("");
+  const [distributeAmountInput, setDistributeAmountInput] = useState<string>("");
+  const [distributeAmount, setDistributeAmount] = useState(0n);
+
   const {
     writeContractAsync: createPoolWriteAsync,
     isSuccess: isCreatePoolSuccess,
@@ -55,6 +58,11 @@ export const GithubSuperfluidPool = ({
     isPending: isDistributePoolLoading,
   } = useScaffoldWriteContract("GDAv1Forwarder");
   const {
+    writeContractAsync: distributeAmountWriteAsync,
+    isSuccess: isDistributeAmountToPoolSuccess,
+    isPending: isDistributeAmountToPoolLoading,
+  } = useScaffoldWriteContract("GDAv1Forwarder");
+  const {
     refetch,
     isFetching: isConnectReadLoading,
     data: isConnectReadData,
@@ -65,7 +73,7 @@ export const GithubSuperfluidPool = ({
   });
   const GET_POOL_CREATED = gql`
     query MyQuery {
-      pools(first: 10, where: { admin: "${senderAddress?.toLocaleLowerCase()}" }) {
+      pools(first: 10, where: { admin: "${repoAddress?.toLocaleLowerCase()}" }) {
         id  
         totalUnits
         totalMembers
@@ -93,7 +101,7 @@ export const GithubSuperfluidPool = ({
         functionName: "createPool",
         args: [
           NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT,
-          senderAddress,
+          repoAddress,
           {
             transferabilityForUnitsOwner: false,
             distributionFromAnyAddress: false,
@@ -164,6 +172,23 @@ export const GithubSuperfluidPool = ({
       notification.error("Please set right donate flow rate.");
     }
   };
+  const distributeAmountToPool = () => {
+    if (distributeAmount > 0n) {
+      distributeAmountWriteAsync(
+        {
+          functionName: "distribute",
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, poolAddress, distributeAmount, "0x0"],
+        },
+        {
+          onBlockConfirmation: txnReceipt => {
+            console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          },
+        },
+      );
+    } else {
+      notification.error("Please set right donate amount.");
+    }
+  };
 
   const openUpdateMemberUnitsModel = () => {
     modalRef.current && modalRef.current.showModal();
@@ -175,11 +200,22 @@ export const GithubSuperfluidPool = ({
       const donateFlowRateWei = parseEther(flowRateNumber.toString());
       const flowRate = donateFlowRateWei / (24n * 60n * 60n);
       setDistributeFlowRate(flowRate);
-      console.log(`flowRate for ${repoAddress}: ${flowRate}`);
+      console.log(`donate flowRate for ${repoAddress}: ${flowRate}`);
     } else {
       setDistributeFlowRate(0n);
     }
   }, [distributeFlowRateInput]);
+
+  useEffect(() => {
+    if (distributeAmountInput && !isNaN(parseFloat(distributeAmountInput))) {
+      const flowRateNumber = parseFloat(distributeAmountInput);
+      const donateAmountWei = parseEther(flowRateNumber.toString());
+      setDistributeAmount(donateAmountWei);
+      console.log(`donate amount for ${repoAddress}: ${donateAmountWei}`);
+    } else {
+      setDistributeAmount(0n);
+    }
+  }, [distributeAmountInput]);
 
   useEffect(() => {
     if (createdPoolsInfo && createdPoolsInfo.pools && createdPoolsInfo.pools.length) {
@@ -195,9 +231,10 @@ export const GithubSuperfluidPool = ({
   return (
     <>
       <div className="mt-5 space-y-5">
+        {/* pool info */}
         {getCreatedPoolsInfoLoading && <div>Loading...</div>}
         {isConnectReadLoading && <div>Get connect pool status loading...</div>}
-        {poolAddress && (
+        {poolAddress ? (
           <div>
             <h3 className="text-blue-500">Created Pool Address:</h3>
             <p className="break-all">{poolAddress}</p>
@@ -205,28 +242,57 @@ export const GithubSuperfluidPool = ({
               <p> Current account connected:{isConnectReadData ? "true" : "false"}</p>
             )}
           </div>
+        ) : (
+          !getCreatedPoolsInfoLoading && <div className="text-blue-500">No pool created yet</div>
         )}
+
+        {/* distribute */}
         {!getCreatedPoolsInfoLoading && poolAddress && (
-          <div className="flex items-center justify-center">
-            <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
-              <input
-                value={distributeFlowRateInput}
-                onChange={e => setDistributeFlowRateInput(e.target.value)}
-                type="text"
-                placeholder="Type Flow Rate"
-                className="dark:!bg-[#385183] grow w-[6rem]"
-              />
-              RMUDx/Day
-            </label>
-            <button
-              disabled={isDistributePoolLoading}
-              onClick={distributeFlow}
-              className="btn btn-success btn-outline ml-2"
-            >
-              Distribute
-            </button>
-          </div>
+          <>
+            <div className="badge badge-primary">Distribute Flow</div>
+            <div className="flex items-center justify-center">
+              <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+                <input
+                  value={distributeFlowRateInput}
+                  onChange={e => setDistributeFlowRateInput(e.target.value)}
+                  type="text"
+                  placeholder="Type Flow Rate"
+                  className="dark:!bg-[#385183] grow w-[6rem]"
+                />
+                RMUDx/Day
+              </label>
+              <button
+                disabled={isDistributePoolLoading}
+                onClick={distributeFlow}
+                className="btn btn-success btn-outline ml-2"
+              >
+                Distribute
+              </button>
+            </div>
+            <div className="badge badge-primary">Distribute Amount</div>
+            <div className="flex items-center justify-center">
+              <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+                <input
+                  value={distributeAmountInput}
+                  onChange={e => setDistributeAmountInput(e.target.value)}
+                  type="text"
+                  placeholder="Type Amount"
+                  className="dark:!bg-[#385183] grow w-[6rem]"
+                />
+                RMUDx
+              </label>
+              <button
+                disabled={isDistributePoolLoading}
+                onClick={distributeAmountToPool}
+                className="btn btn-success btn-outline ml-2"
+              >
+                Distribute
+              </button>
+            </div>
+          </>
         )}
+
+        {/* connect/disconnect pool */}
         {senderAddress &&
           [...flowRateRatioMap.keys()].includes(senderAddress) &&
           (isConnectReadData ? (
@@ -239,7 +305,7 @@ export const GithubSuperfluidPool = ({
             </button>
           ))}
 
-        {/* member unit */}
+        {/* create pool/set member unit */}
         {repoAddress === senderAddress &&
           !getCreatedPoolsInfoLoading &&
           (poolAddress ? (
