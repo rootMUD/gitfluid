@@ -104,7 +104,7 @@ export const GithubSuperfluidPool = ({
           repoAddress,
           {
             transferabilityForUnitsOwner: false,
-            distributionFromAnyAddress: false,
+            distributionFromAnyAddress: true,
           },
         ],
       },
