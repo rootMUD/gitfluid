@@ -8,6 +8,12 @@
 
 > https://console.superfluid.finance/optimism-mainnet/protocol
 
+🐒 The document about the distribution by Superfluid(Instant Way/Stream Way).
+
+> https://docs.superfluid.finance/docs/protocol/distributions/guides/pools
+>
+> https://docs.superfluid.finance/docs/technical-reference/SuperTokenV1Library#fn-distribute
+
 Test Token RMUDx: 
 
 > https://optimistic.etherscan.io/address/0xaf921d3d5a903f8b658aeaebed7a30b3dbb5b7bc
