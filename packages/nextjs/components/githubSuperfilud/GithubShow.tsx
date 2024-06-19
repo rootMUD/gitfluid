@@ -44,7 +44,7 @@ export function GithubShow({ repositories }: GithubShowProps) {
       {repositories.map((repo, index) => (
         <Card
           key={index}
-          className="h-[36rem] overflow-y-scroll"
+          className="h-[36rem] overflow-y-auto overflow-x-hidden"
           style={theme === "dark" ? { scrollbarColor: "#385183 black" } : { scrollbarColor: "#93BBFB white" }}
         >
           <CardHeader className="flex items-start justify-between">

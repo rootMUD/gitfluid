@@ -18,20 +18,34 @@ export const GithubSuperfluidPool = ({
 }) => {
   const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
   const POOL_ADDRESS = "0x3185F89934AE3d894a60d0fBe49384eabFC18135";
+  /** moke pool for test */
+  // const POOL_ADDRESS = "0xCF0Eaf51b5F7bA7cC2BF672dc05EBb6B4579d536";
   const { theme } = useTheme();
   const { address: senderAddress } = useAccount();
   const [distributeFlowRateInput, setDistributeFlowRateInput] = useState("");
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
   const [distributeAmountInput, setDistributeAmountInput] = useState<string>("");
   const [distributeAmount, setDistributeAmount] = useState(0n);
-
-  const { writeContractAsync: createPoolWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
-  const { writeContractAsync: connectPoolWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
-  const { writeContractAsync: disconnectPoolWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
+  const {
+    refetch: distributionFlowRateRefrech,
+    isFetching: readDistributionFlowRateLoading,
+    data: distributionFlowRateReadData,
+  } = useScaffoldReadContract({
+    contractName: "GDAv1Forwarder",
+    functionName: "getFlowDistributionFlowRate",
+    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS],
+  });
+  const { writeContractAsync: createPoolWriteAsync, isPending: isCreatePoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: connectPoolWriteAsync, isPending: isConnectPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: disconnectPoolWriteAsync, isPending: isDisconnectPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
 
   const { writeContractAsync: distributeWriteAsync, isPending: isDistributePoolLoading } =
     useScaffoldWriteContract("GDAv1Forwarder");
-  const { writeContractAsync: distributeAmountWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: distributeAmountWriteAsync, isPending: isDistributeAmountPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
   const {
     refetch: isMemberConnectedRefetch,
     isFetching: isConnectReadLoading,
@@ -50,7 +64,7 @@ export const GithubSuperfluidPool = ({
         `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
           repoAddress.length - 4,
           repoAddress.length,
-        )} can create stream.`,
+        )} can create pool.`,
       );
     }
     createPoolWriteAsync(
@@ -58,7 +72,7 @@ export const GithubSuperfluidPool = ({
         functionName: "createPool",
         args: [
           NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT,
-          repoAddress,
+          senderAddress,
           {
             transferabilityForUnitsOwner: false,
             distributionFromAnyAddress: true,
@@ -92,11 +106,12 @@ export const GithubSuperfluidPool = ({
     connectPoolWriteAsync(
       {
         functionName: "connectPool",
-        args: [senderAddress, "0x0"],
+        args: [POOL_ADDRESS, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          isMemberConnectedRefetch();
         },
       },
     );
@@ -114,13 +129,14 @@ export const GithubSuperfluidPool = ({
       {
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          isMemberConnectedRefetch();
         },
       },
     );
   };
 
   const distributeFlow = () => {
-    if (distributeFlowRate > 0n) {
+    if (distributeFlowRate >= 0n) {
       distributeWriteAsync(
         {
           functionName: "distributeFlow",
@@ -129,6 +145,7 @@ export const GithubSuperfluidPool = ({
         {
           onBlockConfirmation: txnReceipt => {
             console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+            distributionFlowRateRefrech();
           },
         },
       );
@@ -160,7 +177,7 @@ export const GithubSuperfluidPool = ({
         `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
           repoAddress.length - 4,
           repoAddress.length,
-        )} can create stream.`,
+        )} can set member unit.`,
       );
     }
     modalRef.current && modalRef.current.showModal();
@@ -194,98 +211,149 @@ export const GithubSuperfluidPool = ({
       isMemberConnectedRefetch();
     }
   }, [senderAddress]);
+
   return (
     <>
       <div className="mt-5 space-y-5">
         {/* pool info */}
         <div>
-          <h3 className="text-blue-500">Created Pool Address:</h3>
-          <p className="break-all">{POOL_ADDRESS}</p>
+          <h3 className="text-blue-500">Pool Address:</h3>
+          <p className="text-center break-all">{POOL_ADDRESS}</p>
+          <p className="m-0">
+            <span className="text-blue-500">Current Flow Rate With Pool:</span>
+            {readDistributionFlowRateLoading ? (
+              <span className="flex justify-center items-center">
+                <span className="loading loading-dots loading-md text-center"></span>
+              </span>
+            ) : (
+              <span className="block text-center ">
+                {!distributionFlowRateReadData && distributionFlowRateReadData !== 0n && "UNKNOW"}
+                {distributionFlowRateReadData ||
+                  (distributionFlowRateReadData == 0n && distributionFlowRateReadData.toString() + "wei RMUDx/s")}
+              </span>
+            )}
+          </p>
         </div>
         {senderAddress && (
           <>
-            {/* distribute */}
-            <div className="badge badge-primary">Distribute Flow</div>
-            <div className="flex items-center justify-center">
-              <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
-                <input
-                  value={distributeFlowRateInput}
-                  onChange={e => setDistributeFlowRateInput(e.target.value)}
-                  type="text"
-                  placeholder="Type Flow Rate"
-                  className="dark:!bg-[#385183] grow w-[6rem]"
-                />
-                RMUDx/Day
-              </label>
-              <button
-                disabled={isDistributePoolLoading}
-                onClick={distributeFlow}
-                className="btn btn-success btn-outline ml-2"
-              >
-                Distribute
-              </button>
+            {/* distribute flow*/}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Distribute Flow</div>
+
+              <p className="m-0">
+                <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
+                <span className="block text-center">{distributeFlowRate.toString() + "wei RMUDx/s"}</span>
+              </p>
+
+              <div className="flex items-center justify-center">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto min-w-[16rem] w-full">
+                  <input
+                    value={distributeFlowRateInput}
+                    onChange={e => setDistributeFlowRateInput(e.target.value)}
+                    type="text"
+                    placeholder="Type Flow Rate"
+                    className="dark:!bg-[#385183] grow w-[6rem]"
+                  />
+                  RMUDx/Day
+                </label>
+                <button
+                  disabled={isDistributePoolLoading}
+                  onClick={distributeFlow}
+                  className="btn btn-success btn-outline ml-2"
+                >
+                  Distribute
+                </button>
+              </div>
             </div>
-            <div className="badge badge-primary">Distribute Amount</div>
-            <div className="flex items-center justify-center">
-              <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
-                <input
-                  value={distributeAmountInput}
-                  onChange={e => setDistributeAmountInput(e.target.value)}
-                  type="text"
-                  placeholder="Type Amount"
-                  className="dark:!bg-[#385183] grow w-[6rem]"
-                />
-                RMUDx
-              </label>
-              <button
-                disabled={isDistributePoolLoading}
-                onClick={distributeAmountToPool}
-                className="btn btn-success btn-outline ml-2"
-              >
-                Distribute
-              </button>
+
+            {/* distribute amount*/}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Distribute Amount</div>
+              <p className="m-0">
+                <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
+                <span className="block text-center">{distributeAmount.toString() + "wei RMUDx"}</span>
+              </p>
+              <div className="flex items-center justify-center">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto min-w-[16rem] w-full">
+                  <input
+                    value={distributeAmountInput}
+                    onChange={e => setDistributeAmountInput(e.target.value)}
+                    type="text"
+                    placeholder="Type Amount"
+                    className="dark:!bg-[#385183] grow w-[6rem]"
+                  />
+                  RMUDx
+                </label>
+                <button
+                  disabled={isDistributeAmountPoolLoading}
+                  onClick={distributeAmountToPool}
+                  className="btn btn-success btn-outline ml-2"
+                >
+                  Distribute
+                </button>
+              </div>
             </div>
 
             {/* connect/disconnect pool */}
-            <div className="badge badge-primary">Connect/Disconnect Pool</div>
+            <div className="space-y-2">
+              <div className="badge badge-primary">Connect/Disconnect Pool</div>
 
-            {[...flowRateRatioMap.keys()].includes(senderAddress) ? (
-              <div className="flex justify-start items-center">
-                <span className="text-blue-500">Current account connected:</span>
-                {isConnectReadLoading ? (
-                  <span className="loading loading-dots loading-md text-center"></span>
-                ) : isConnectReadData ? (
-                  "true"
-                ) : (
-                  "false"
-                )}
-              </div>
-            ) : (
-              <p className="text-blue-500">You are not the pool member yet</p>
-            )}
-            {isConnectReadData ? (
-              <>
-                <button className="w-full flex mx-auto btn btn-primary" onClick={disconnectPool}>
-                  Disconnect Pool
-                </button>
-              </>
-            ) : (
-              <>
-                <button className="w-full flex mx-auto btn btn-primary" onClick={connectPool}>
-                  Connect Pool
-                </button>
-              </>
-            )}
+              {[...flowRateRatioMap.keys()].includes(senderAddress) ? (
+                <div className="flex justify-start items-center">
+                  <span className="text-blue-500">Current account connected:</span>
+                  {isConnectReadLoading ? (
+                    <span className="loading loading-dots loading-md text-center"></span>
+                  ) : isConnectReadData ? (
+                    "true"
+                  ) : (
+                    "false"
+                  )}
+                </div>
+              ) : (
+                <p className="text-blue-500">You are not the pool member yet</p>
+              )}
+              {isConnectReadData ? (
+                <>
+                  <button
+                    className="w-full flex mx-auto btn btn-primary"
+                    disabled={isDisconnectPoolLoading}
+                    onClick={disconnectPool}
+                  >
+                    Disconnect Pool
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="w-full flex mx-auto btn btn-primary"
+                    disabled={isConnectPoolLoading}
+                    onClick={connectPool}
+                  >
+                    Connect Pool
+                  </button>
+                </>
+              )}
+            </div>
 
-            {/* create pool/set member unit */}
-            <div className="badge badge-primary">Set Member Unit</div>
-            <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
-              Update Member Units
-            </button>
-            <div className="badge badge-primary">Create Pool</div>
-            <button className="w-full flex mx-auto btn btn-accent" onClick={createPool}>
-              Create Pool
-            </button>
+            {/*set member unit */}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Set Member Unit</div>
+              <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
+                Update Member Units
+              </button>
+            </div>
+
+            {/* create pool */}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Create Pool</div>
+              <button
+                className="w-full flex mx-auto btn btn-accent"
+                disabled={isCreatePoolLoading}
+                onClick={createPool}
+              >
+                Create Pool
+              </button>
+            </div>
           </>
         )}
       </div>
