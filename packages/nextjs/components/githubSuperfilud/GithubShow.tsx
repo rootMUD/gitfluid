@@ -39,7 +39,6 @@ interface GithubShowProps {
 
 export function GithubShow({ repositories }: GithubShowProps) {
   const { theme } = useTheme();
-  console.log("theme", theme);
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 md:p-8 lg:p-10">
       {repositories.map((repo, index) => (

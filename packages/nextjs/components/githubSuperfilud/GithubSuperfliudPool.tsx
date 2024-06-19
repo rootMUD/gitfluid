@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { GithubSuperfluidPoolMemberUnitUpdate } from "./GithubSuperfliudPoolMemberUpdate";
 import { gql, useQuery } from "@apollo/client";
 import "github-markdown-css";
+import { useTheme } from "next-themes";
 import { parseEther } from "viem";
 import { decodeFunctionResult } from "viem";
 import { useAccount } from "wagmi";
@@ -29,6 +30,7 @@ export const GithubSuperfluidPool = ({
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
   const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+  const { theme } = useTheme();
   const { address: senderAddress } = useAccount();
   const [distributeFlowRateInput, setDistributeFlowRateInput] = useState("");
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
@@ -319,25 +321,30 @@ export const GithubSuperfluidPool = ({
           ))}
       </div>
       <dialog ref={modalRef} className="modal">
-        <div className="modal-box overflow-y-scroll">
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-          </form>
-          <h3 className="font-bold text-center text-lg">Update Member Units</h3>
-          <ul className="break-all list-none space-y-5">
-            {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
-              return (
-                <li className="bg-base-300 p-5 rounded-box" key={index}>
-                  <GithubSuperfluidPoolMemberUnitUpdate
-                    poolAddress={poolAddress}
-                    receiver={receiverAddress}
-                    flowRateRatio={flowRateRatio}
-                  />
-                </li>
-              );
-            })}
-          </ul>
+        <div className="modal-box overflow-hidden py-[0.5rem] pr-[2rem]">
+          <div
+            className="overflow-y-auto max-h-[calc(100vh-6rem)]"
+            style={theme === "dark" ? { scrollbarColor: "black #385183" } : { scrollbarColor: "#93BBFB white" }}
+          >
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 className="font-bold text-center mt-3 text-lg">Update Member Units</h3>
+            <ul className="break-all mb-5 list-none space-y-5">
+              {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
+                return (
+                  <li className="bg-base-300 p-5 rounded-box" key={index}>
+                    <GithubSuperfluidPoolMemberUnitUpdate
+                      poolAddress={poolAddress}
+                      receiver={receiverAddress}
+                      flowRateRatio={flowRateRatio}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
