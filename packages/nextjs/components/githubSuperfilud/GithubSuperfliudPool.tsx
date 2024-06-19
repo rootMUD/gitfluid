@@ -98,6 +98,14 @@ export const GithubSuperfluidPool = ({
   const modalRef = useRef<HTMLDialogElement>(null);
 
   const createPool = () => {
+    if (!senderAddress || senderAddress !== repoAddress) {
+      return notification.error(
+        `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
+          repoAddress.length - 4,
+          repoAddress.length,
+        )} can create stream.`,
+      );
+    }
     createPoolWriteAsync(
       {
         functionName: "createPool",
@@ -130,6 +138,10 @@ export const GithubSuperfluidPool = ({
   };
 
   const connectPool = () => {
+    if (!senderAddress || ![...flowRateRatioMap.keys()].includes(senderAddress)) {
+      return notification.error("This Account is not the pool member.");
+    }
+
     connectPoolWriteAsync(
       {
         functionName: "connectPool",
@@ -144,6 +156,9 @@ export const GithubSuperfluidPool = ({
   };
 
   const disconnectPool = () => {
+    if (!senderAddress || ![...flowRateRatioMap.keys()].includes(senderAddress)) {
+      return notification.error("This Account is not the pool member.");
+    }
     disconnectPoolWriteAsync(
       {
         functionName: "disconnectPool",
@@ -296,29 +311,40 @@ export const GithubSuperfluidPool = ({
 
         {/* connect/disconnect pool */}
         {senderAddress &&
-          [...flowRateRatioMap.keys()].includes(senderAddress) &&
           (isConnectReadData ? (
-            <button className="w-full flex mx-auto btn btn-primary" onClick={disconnectPool}>
-              Disconnect Pool
-            </button>
+            <>
+              <div className="badge badge-primary">Disconnect Pool</div>
+              <button className="w-full flex mx-auto btn btn-primary" onClick={disconnectPool}>
+                Disconnect Pool
+              </button>
+            </>
           ) : (
-            <button className="w-full flex mx-auto btn btn-primary" onClick={connectPool}>
-              Connect Pool
-            </button>
+            <>
+              <div className="badge badge-primary">Connect Pool</div>
+              <button className="w-full flex mx-auto btn btn-primary" onClick={connectPool}>
+                Connect Pool
+              </button>
+            </>
           ))}
 
         {/* create pool/set member unit */}
-        {repoAddress === senderAddress &&
-          !getCreatedPoolsInfoLoading &&
-          (poolAddress ? (
+        {senderAddress && !getCreatedPoolsInfoLoading && poolAddress && (
+          <>
+            <div className="badge badge-primary">Set Member Unit</div>
             <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
               Update Member Units
             </button>
-          ) : (
+          </>
+        )}
+        {senderAddress && (
+          <>
+            <div className="badge badge-primary">Create Pool</div>
+
             <button className="w-full flex mx-auto btn btn-accent" onClick={createPool}>
               Create Pool
             </button>
-          ))}
+          </>
+        )}
       </div>
       <dialog ref={modalRef} className="modal">
         <div className="modal-box overflow-hidden py-[0.5rem] pr-[2rem]">

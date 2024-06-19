@@ -131,8 +131,9 @@ export const GithubSuperfluidStream = ({
   return (
     <div className="mt-5 space-y-5">
       {/* donate superfluid stream */}
-      {senderAddress && senderAddress !== repoAddress && (
+      {senderAddress && (
         <>
+          <div className="badge badge-primary">Donate Superfluid Stream</div>
           <p className="m-0">
             <span className="text-blue-500">Current Donate Flow Rate:</span>
             {readLoading ? (
@@ -142,24 +143,17 @@ export const GithubSuperfluidStream = ({
             ) : (
               <span className="block text-center ">
                 {!flowRateReadData && flowRateReadData !== 0n && "UNKNOW"}
-                {flowRateReadData === 0n && "0 wei RMUDx/s"}
+                {flowRateReadData === 0n && "There is no donate stream yet."}
                 {flowRateReadData && flowRateReadData > 0n && flowRateReadData.toString() + "wei RMUDx/s"}
               </span>
             )}
           </p>
           {flowRateReadData === 0n && (
             <p className="m-0">
-              <span className="text-blue-500">Flow Rate Donate Calculated:</span>
+              <span className="text-blue-500">Flow Rate Donate Typed Calculated:</span>
               <span className="block text-center">{donateFlowRate.toString() + "wei RMUDx/s"}</span>
             </p>
           )}
-          {/* <p className="m-0 flex">
-            <span className="text-blue-500">TX Pendding Status:</span>
-            {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowLoading || isCreateFlowLoading) && (
-              <span className="loading loading-dots loading-md"></span>
-            )}
-            {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowSuccess || isCreateFlowSuccess) && <SuccessIcon />}
-          </p> */}
           <div className="flex items-center justify-center">
             {flowRateReadData === 0n && (
               <>
@@ -195,9 +189,10 @@ export const GithubSuperfluidStream = ({
         </>
       )}
       {/* create stream */}
-      {senderAddress && senderAddress !== repoAddress && (
+      {senderAddress && (
         <>
-          <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
+          <div className="badge badge-primary">Create Stream</div>
+          <label className="w-full input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto">
             <input
               value={totalFlowRate}
               onChange={e => setTotalFlowRate(e.target.value)}
@@ -207,7 +202,7 @@ export const GithubSuperfluidStream = ({
             />
             RMUDx/Day
           </label>
-          <button className="flex mx-auto btn btn-primary" onClick={openStreamInfoModal}>
+          <button className="flex mx-auto w-full btn btn-primary" onClick={openStreamInfoModal}>
             View Calculated Stream Flow Rate Info
           </button>
           <button onClick={openModalToSubmitTx} className="w-full flex mx-auto btn btn-accent">
