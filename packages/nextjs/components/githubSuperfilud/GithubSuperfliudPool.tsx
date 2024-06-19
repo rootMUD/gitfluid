@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { GithubSuperfluidPoolMemberUnitUpdate } from "./GithubSuperfliudPoolMemberUpdate";
-import { gql, useQuery } from "@apollo/client";
 import "github-markdown-css";
 import { useTheme } from "next-themes";
 import { parseEther } from "viem";
@@ -10,18 +9,6 @@ import contractABI from "~~/contracts/externalContracts";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
-interface PoolCreatedInfo {
-  id: string;
-  totalUnits: string;
-  totalMembers: number;
-  flowRate: string;
-  createdAtBlockNumber: string;
-  token: {
-    id: string;
-    isSuperToken: boolean;
-    symbol: string;
-  };
-}
 export const GithubSuperfluidPool = ({
   repoAddress,
   flowRateRatioMap,
@@ -30,71 +17,31 @@ export const GithubSuperfluidPool = ({
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
   const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+  const POOL_ADDRESS = "0x3185F89934AE3d894a60d0fBe49384eabFC18135";
   const { theme } = useTheme();
   const { address: senderAddress } = useAccount();
   const [distributeFlowRateInput, setDistributeFlowRateInput] = useState("");
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
-  const [poolAddress, setPoolAddress] = useState("");
   const [distributeAmountInput, setDistributeAmountInput] = useState<string>("");
   const [distributeAmount, setDistributeAmount] = useState(0n);
 
-  const {
-    writeContractAsync: createPoolWriteAsync,
-    isSuccess: isCreatePoolSuccess,
-    isPending: isCreatePoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    writeContractAsync: connectPoolWriteAsync,
-    isSuccess: isConnectPoolSuccess,
-    isPending: isConnectPoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    writeContractAsync: disconnectPoolWriteAsync,
-    isSuccess: isDisconnectPoolSuccess,
-    isPending: isDisconnectPoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: createPoolWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: connectPoolWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: disconnectPoolWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
 
+  const { writeContractAsync: distributeWriteAsync, isPending: isDistributePoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: distributeAmountWriteAsync } = useScaffoldWriteContract("GDAv1Forwarder");
   const {
-    writeContractAsync: distributeWriteAsync,
-    isSuccess: isDistributePoolSuccess,
-    isPending: isDistributePoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    writeContractAsync: distributeAmountWriteAsync,
-    isSuccess: isDistributeAmountToPoolSuccess,
-    isPending: isDistributeAmountToPoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    refetch,
+    refetch: isMemberConnectedRefetch,
     isFetching: isConnectReadLoading,
     data: isConnectReadData,
   } = useScaffoldReadContract({
     contractName: "GDAv1Forwarder",
     functionName: "isMemberConnected",
-    args: [poolAddress, senderAddress],
+    args: [POOL_ADDRESS, senderAddress],
   });
-  const GET_POOL_CREATED = gql`
-    query MyQuery {
-      pools(first: 10, where: { admin: "${repoAddress?.toLocaleLowerCase()}" }) {
-        id  
-        totalUnits
-        totalMembers
-        flowRate
-        createdAtBlockNumber
-        token {
-          id
-          isSuperToken
-          symbol
-        }
-      }
-    }
-  `;
-  const {
-    loading: getCreatedPoolsInfoLoading,
-    data: createdPoolsInfo,
-  }: { loading: boolean; data: { pools: PoolCreatedInfo[] } | undefined } = useQuery(GET_POOL_CREATED);
 
-  console.log("get createdPoolsInfo", createdPoolsInfo, GET_POOL_CREATED.loc?.source.body);
   const modalRef = useRef<HTMLDialogElement>(null);
 
   const createPool = () => {
@@ -124,13 +71,13 @@ export const GithubSuperfluidPool = ({
           const createdPoolAddressData = txnReceipt.logs.find(
             log => log.topics[0] === "0x9c5d829b9b23efc461f9aeef91979ec04bb903feb3bee4f26d22114abfc7335b",
           )?.data;
-          if (!poolAddress && createdPoolAddressData) {
+          if (createdPoolAddressData) {
             const createdPoolAddress = decodeFunctionResult({
               abi: contractABI[10].GDAv1Forwarder.abi,
               functionName: "createPool",
               data: createdPoolAddressData,
             });
-            setPoolAddress(createdPoolAddress as string);
+            console.log(`Created pool address: ${createdPoolAddress}`);
           }
         },
       },
@@ -162,7 +109,7 @@ export const GithubSuperfluidPool = ({
     disconnectPoolWriteAsync(
       {
         functionName: "disconnectPool",
-        args: [poolAddress, "0x0"],
+        args: [POOL_ADDRESS, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {
@@ -177,7 +124,7 @@ export const GithubSuperfluidPool = ({
       distributeWriteAsync(
         {
           functionName: "distributeFlow",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, poolAddress, distributeFlowRate, "0x0"],
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeFlowRate, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -194,7 +141,7 @@ export const GithubSuperfluidPool = ({
       distributeAmountWriteAsync(
         {
           functionName: "distribute",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, poolAddress, distributeAmount, "0x0"],
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeAmount, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -208,6 +155,14 @@ export const GithubSuperfluidPool = ({
   };
 
   const openUpdateMemberUnitsModel = () => {
+    if (!senderAddress || senderAddress !== repoAddress) {
+      return notification.error(
+        `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
+          repoAddress.length - 4,
+          repoAddress.length,
+        )} can create stream.`,
+      );
+    }
     modalRef.current && modalRef.current.showModal();
   };
 
@@ -235,37 +190,21 @@ export const GithubSuperfluidPool = ({
   }, [distributeAmountInput]);
 
   useEffect(() => {
-    if (createdPoolsInfo && createdPoolsInfo.pools && createdPoolsInfo.pools.length) {
-      setPoolAddress(createdPoolsInfo.pools[0]?.id);
-    }
-  }, [createdPoolsInfo]);
-
-  useEffect(() => {
     if (senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress)) {
-      refetch();
+      isMemberConnectedRefetch();
     }
-  }, [poolAddress, senderAddress]);
+  }, [senderAddress]);
   return (
     <>
       <div className="mt-5 space-y-5">
         {/* pool info */}
-        {getCreatedPoolsInfoLoading && <div>Loading...</div>}
-        {isConnectReadLoading && <div>Get connect pool status loading...</div>}
-        {poolAddress ? (
-          <div>
-            <h3 className="text-blue-500">Created Pool Address:</h3>
-            <p className="break-all">{poolAddress}</p>
-            {senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress) && (
-              <p> Current account connected:{isConnectReadData ? "true" : "false"}</p>
-            )}
-          </div>
-        ) : (
-          !getCreatedPoolsInfoLoading && <div className="text-blue-500">No pool created yet</div>
-        )}
-
-        {/* distribute */}
-        {!getCreatedPoolsInfoLoading && poolAddress && (
+        <div>
+          <h3 className="text-blue-500">Created Pool Address:</h3>
+          <p className="break-all">{POOL_ADDRESS}</p>
+        </div>
+        {senderAddress && (
           <>
+            {/* distribute */}
             <div className="badge badge-primary">Distribute Flow</div>
             <div className="flex items-center justify-center">
               <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
@@ -306,40 +245,44 @@ export const GithubSuperfluidPool = ({
                 Distribute
               </button>
             </div>
-          </>
-        )}
 
-        {/* connect/disconnect pool */}
-        {senderAddress &&
-          (isConnectReadData ? (
-            <>
-              <div className="badge badge-primary">Disconnect Pool</div>
-              <button className="w-full flex mx-auto btn btn-primary" onClick={disconnectPool}>
-                Disconnect Pool
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="badge badge-primary">Connect Pool</div>
-              <button className="w-full flex mx-auto btn btn-primary" onClick={connectPool}>
-                Connect Pool
-              </button>
-            </>
-          ))}
+            {/* connect/disconnect pool */}
+            <div className="badge badge-primary">Connect/Disconnect Pool</div>
 
-        {/* create pool/set member unit */}
-        {senderAddress && !getCreatedPoolsInfoLoading && poolAddress && (
-          <>
+            {[...flowRateRatioMap.keys()].includes(senderAddress) ? (
+              <div className="flex justify-start items-center">
+                <span className="text-blue-500">Current account connected:</span>
+                {isConnectReadLoading ? (
+                  <span className="loading loading-dots loading-md text-center"></span>
+                ) : isConnectReadData ? (
+                  "true"
+                ) : (
+                  "false"
+                )}
+              </div>
+            ) : (
+              <p className="text-blue-500">You are not the pool member yet</p>
+            )}
+            {isConnectReadData ? (
+              <>
+                <button className="w-full flex mx-auto btn btn-primary" onClick={disconnectPool}>
+                  Disconnect Pool
+                </button>
+              </>
+            ) : (
+              <>
+                <button className="w-full flex mx-auto btn btn-primary" onClick={connectPool}>
+                  Connect Pool
+                </button>
+              </>
+            )}
+
+            {/* create pool/set member unit */}
             <div className="badge badge-primary">Set Member Unit</div>
             <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
               Update Member Units
             </button>
-          </>
-        )}
-        {senderAddress && (
-          <>
             <div className="badge badge-primary">Create Pool</div>
-
             <button className="w-full flex mx-auto btn btn-accent" onClick={createPool}>
               Create Pool
             </button>
@@ -362,7 +305,7 @@ export const GithubSuperfluidPool = ({
                 return (
                   <li className="bg-base-300 p-5 rounded-box" key={index}>
                     <GithubSuperfluidPoolMemberUnitUpdate
-                      poolAddress={poolAddress}
+                      poolAddress={POOL_ADDRESS}
                       receiver={receiverAddress}
                       flowRateRatio={flowRateRatio}
                     />
