@@ -30,18 +30,10 @@ export const GithubSuperfluidStreamCreate = forwardRef(
       functionName: "getFlowrate",
       args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver],
     });
-    const {
-      writeContractAsync: createStreamWriteAsync,
-      isIdle: isCreateFlowIdle,
-      isSuccess: isCreateFlowSuccess,
-      isPending: isCreateFlowLoading,
-    } = useScaffoldWriteContract("CFAv1Forwarder");
-    const {
-      writeContractAsync: removeStreamWriteAsync,
-      isIdle: isRemoveFlowIdle,
-      isSuccess: isRemoveFlowSuccess,
-      isPending: isRemoveFlowLoading,
-    } = useScaffoldWriteContract("CFAv1Forwarder");
+    const { writeContractAsync: createStreamWriteAsync, isPending: isCreateFlowLoading } =
+      useScaffoldWriteContract("CFAv1Forwarder");
+    const { writeContractAsync: removeStreamWriteAsync, isPending: isRemoveFlowLoading } =
+      useScaffoldWriteContract("CFAv1Forwarder");
     const createStream = () => {
       if (flowRate > 0n) {
         console.log(`create stearm from ${senderAddress} to ${receiver}`, `flowRate: ${flowRate}`);
@@ -49,11 +41,11 @@ export const GithubSuperfluidStreamCreate = forwardRef(
           {
             functionName: "createFlow",
             args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, "0x0"],
-            value: parseEther("0"),
           },
           {
             onBlockConfirmation: txnReceipt => {
               console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+              refetch();
             },
           },
         );
@@ -65,11 +57,11 @@ export const GithubSuperfluidStreamCreate = forwardRef(
         {
           functionName: "deleteFlow",
           args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
-          value: parseEther("0"),
         },
         {
           onBlockConfirmation: txnReceipt => {
             console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+            refetch();
           },
         },
       );
@@ -77,10 +69,6 @@ export const GithubSuperfluidStreamCreate = forwardRef(
     useImperativeHandle(ref, () => ({
       createStream,
     }));
-
-    useEffect(() => {
-      refetch();
-    }, [isCreateFlowSuccess, isRemoveFlowSuccess]);
     return (
       <>
         <p className="m-0">
@@ -91,7 +79,6 @@ export const GithubSuperfluidStreamCreate = forwardRef(
             </span>
           ) : (
             <span className="block text-center ">
-              {" "}
               {flowRateReadData === 0n ? "0 wei RMUDx/s" : flowRateReadData?.toString() + "wei RMUDx/s"}
             </span>
           )}
@@ -100,19 +87,12 @@ export const GithubSuperfluidStreamCreate = forwardRef(
           <span className="text-blue-500">flowRate need to set:</span>
           <span className="block text-center">{flowRate.toString() + "wei RMUDx/s"}</span>
         </p>
-        <p className="m-0 flex">
-          <span className="text-blue-500">tx pedding status:</span>
-          {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowLoading || isCreateFlowLoading) && (
-            <span className="loading loading-dots loading-md"></span>
-          )}
-          {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowSuccess || isCreateFlowSuccess) && <SuccessIcon />}
-        </p>
         {flowRateReadData === 0n ? (
-          <button className="mt-5 btn mx-auto w-full btn-sm" onClick={createStream}>
+          <button className="mt-5 btn mx-auto w-full btn-sm" disabled={isCreateFlowLoading} onClick={createStream}>
             create stream
           </button>
         ) : (
-          <button className="mt-5 btn mx-auto w-full btn-sm" onClick={removeStream}>
+          <button className="mt-5 btn mx-auto w-full btn-sm" disabled={isRemoveFlowLoading} onClick={removeStream}>
             remove stream
           </button>
         )}

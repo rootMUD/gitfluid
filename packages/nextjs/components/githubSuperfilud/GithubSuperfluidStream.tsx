@@ -157,7 +157,7 @@ export const GithubSuperfluidStream = ({
           <div className="flex items-center justify-center">
             {flowRateReadData === 0n && (
               <>
-                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
                   <input
                     value={donateFlowRateInput}
                     onChange={e => setDonateFlowRateInput(e.target.value)}

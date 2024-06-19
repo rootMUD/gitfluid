@@ -246,7 +246,7 @@ export const GithubSuperfluidPool = ({
               </p>
 
               <div className="flex items-center justify-center">
-                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto min-w-[16rem] w-full">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
                   <input
                     value={distributeFlowRateInput}
                     onChange={e => setDistributeFlowRateInput(e.target.value)}
@@ -274,7 +274,7 @@ export const GithubSuperfluidPool = ({
                 <span className="block text-center">{distributeAmount.toString() + "wei RMUDx"}</span>
               </p>
               <div className="flex items-center justify-center">
-                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto min-w-[16rem] w-full">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
                   <input
                     value={distributeAmountInput}
                     onChange={e => setDistributeAmountInput(e.target.value)}
