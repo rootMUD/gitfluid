@@ -13,6 +13,8 @@
 > https://docs.superfluid.finance/docs/protocol/distributions/guides/pools
 >
 > https://docs.superfluid.finance/docs/technical-reference/SuperTokenV1Library#fn-distribute
+>
+> https://docs.superfluid.finance/docs/protocol/distributions/overview
 
 Test Token RMUDx: 
 
