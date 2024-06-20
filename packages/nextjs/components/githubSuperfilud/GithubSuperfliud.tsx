@@ -6,13 +6,13 @@ import { GithubSuperfluidStream } from "./GithubSuperfluidStream";
 import { clsx } from "clsx";
 import { useAccount } from "wagmi";
 
-enum DISTRIBUTION_MODE {
-  STREAM_MODE = "Stream Mode",
-  POOL_MODE = "Pool Mode",
-}
+// enum DISTRIBUTION_MODE {
+//   // STREAM_MODE = "Stream Mode",
+//   POOL_MODE = "Pool Mode",
+// }
 export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
   const { address: connectedWallet } = useAccount();
-  const [distrbutionMode, setDistrbutionMode] = useState(DISTRIBUTION_MODE.STREAM_MODE);
+  // const [distrbutionMode, setDistrbutionMode] = useState(DISTRIBUTION_MODE.POOL_MODE);
 
   console.log(`Creating superfluid stream for address: ${repo.ethAddress}`);
   console.log(`Creating superfluid stream based on rules: ${JSON.stringify(repo.distributionRulesJSON)}`);
@@ -44,7 +44,7 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
     return flowRateRatioMap;
   };
   const flowRateRatioMap = getFlowRateRatioMap(repo);
-  const MODE_TABS = [DISTRIBUTION_MODE.POOL_MODE, DISTRIBUTION_MODE.STREAM_MODE];
+  // const MODE_TABS = [DISTRIBUTION_MODE.POOL_MODE, DISTRIBUTION_MODE.STREAM_MODE];
   return (
     <>
       {/* Not connected to wallet yet */}
@@ -54,7 +54,7 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
         </div>
       )}
       {/* Connected to wallet */}
-      {connectedWallet && (
+      {/* {connectedWallet && (
         <div role="tablist" className="mt-5 tabs tabs-boxed">
           {MODE_TABS.map((mode, index) => {
             return (
@@ -71,13 +71,11 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
             );
           })}
         </div>
-      )}
-      {connectedWallet && distrbutionMode === DISTRIBUTION_MODE.STREAM_MODE && (
+      )} */}
+      {/* {connectedWallet && distrbutionMode === DISTRIBUTION_MODE.STREAM_MODE && (
         <GithubSuperfluidStream repoAddress={repo.ethAddress} flowRateRatioMap={flowRateRatioMap} />
-      )}
-      {connectedWallet && distrbutionMode === DISTRIBUTION_MODE.POOL_MODE && (
-        <GithubSuperfluidPool repoAddress={repo.ethAddress} flowRateRatioMap={flowRateRatioMap} />
-      )}
+      )} */}
+      {connectedWallet && <GithubSuperfluidPool poolAddress={repo.poolAddress} repoAddress={repo.ethAddress} flowRateRatioMap={flowRateRatioMap} />}
     </>
   );
 };

@@ -51,6 +51,7 @@ export const fetchDistributionOfRepo = async (owner, repo) => {
       throw new Error("Failed to fetch data from server");
     }
     const data = await response.json();
+    console.log("repo info", data);
     return data.result;
   } catch (error) {
     console.error("Error fetching distribution of repository:", error);

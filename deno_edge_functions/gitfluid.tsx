@@ -285,38 +285,43 @@ router
     const owner = queryParams.get("owner");
     const repoName = queryParams.get("repo");
     const githubToken = Deno.env.get("GITHUB_TOKEN");
-
+  
     if (!githubToken) {
       context.response.status = 500;
       context.response.body = "GitHub token is not set.";
       return;
     }
-
+  
     const url = `https://api.github.com/repos/${owner}/${repoName}/readme`;
     const response = await fetch(url, {
       headers: {
         Authorization: `token ${githubToken}`,
-        Accept: "application/vnd.github.v3.raw", // Use the raw format if you want to get the content directly
+        Accept: "application/vnd.github.v3.raw",
       },
     });
-
+  
     if (!response.ok) {
       console.error(`Failed to fetch README.md: ${response.statusText}`);
       context.response.status = response.status;
       context.response.body = `Failed to fetch README.md: ${response.statusText}`;
       return;
     }
-
-    const content = await response.text(); // Get the content as text directly because of 'vnd.github.v3.raw'
+  
+    const content = await response.text();
+    const poolAddrMatch = content.match(/> Pool Addr: (\w{42})/);
+    const poolAddr = poolAddrMatch ? poolAddrMatch[1] : "Not found";
+  
     let distributionRulesJSON = await parseDistributionRules(content);
-    let distributionRulesMD = extractDistributionRulesSection(content)
+    let distributionRulesMD = extractDistributionRulesSection(content);
+  
     context.response.body = {
-      result: 
-        {
-          "distribution_rules_json": distributionRulesJSON, // return the decoded content of README.md
-          "distribution_rules_md": distributionRulesMD, // return the raw content of README.md
-    }};
-  });
+      result: {
+        "pool_addr": poolAddr, // Extracted Pool Address
+        "distribution_rules_json": distributionRulesJSON,
+        "distribution_rules_md": distributionRulesMD,
+      },
+    };
+  })
 
 const app = new Application();
 app.use(oakCors()); // Enable CORS for All Routes

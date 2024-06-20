@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { GithubSuperfluidPoolMemberUnitUpdate } from "./GithubSuperfliudPoolMemberUpdate";
 import "github-markdown-css";
 import { useTheme } from "next-themes";
@@ -12,12 +13,17 @@ import { notification } from "~~/utils/scaffold-eth";
 export const GithubSuperfluidPool = ({
   repoAddress,
   flowRateRatioMap,
+  poolAddress,
 }: {
+  poolAddress: string;
   repoAddress: string;
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
+  // TODO: make this dynamic from .env
   const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
-  const POOL_ADDRESS = "0x3185F89934AE3d894a60d0fBe49384eabFC18135";
+  console.log("poolAddr", poolAddress);
+  // DONE: updated the POOL_ADDRESS with get dynamically from the README.md
+  const POOL_ADDRESS = poolAddress;
   /** moke pool for test */
   // const POOL_ADDRESS = "0xCF0Eaf51b5F7bA7cC2BF672dc05EBb6B4579d536";
   const { theme } = useTheme();
@@ -237,8 +243,12 @@ export const GithubSuperfluidPool = ({
         {senderAddress && (
           <>
             {/* distribute flow*/}
+            <hr></hr>
+            <h2>
+              <center>For Donator</center>
+            </h2>
             <div className="space-y-2">
-              <div className="badge badge-primary">Distribute Flow</div>
+              <div className="badge badge-primary">Distribute by Stream Way</div>
 
               <p className="m-0">
                 <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
@@ -268,7 +278,14 @@ export const GithubSuperfluidPool = ({
 
             {/* distribute amount*/}
             <div className="space-y-2">
-              <div className="badge badge-primary">Distribute Amount</div>
+              <div className="badge badge-primary">Distribute Directly</div>
+              <Image
+                src="/assets/superfluid_distribution_instance.gif"
+                alt="Superfluid Distribution Instance"
+                width={500} // Adjust the width as needed
+                height={300} // Adjust the height as needed
+                layout="responsive" // This makes the image scale nicely to the parent element
+              />
               <p className="m-0">
                 <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
                 <span className="block text-center">{distributeAmount.toString() + "wei RMUDx"}</span>
@@ -293,10 +310,12 @@ export const GithubSuperfluidPool = ({
                 </button>
               </div>
             </div>
-
-            {/* connect/disconnect pool */}
+            <hr></hr>
+            <h2>
+              <center>For Receiver</center>
+            </h2>
             <div className="space-y-2">
-              <div className="badge badge-primary">Connect/Disconnect Pool</div>
+              <div className="badge badge-primary">Connect/Disconnect Pool to receive donation</div>
 
               {[...flowRateRatioMap.keys()].includes(senderAddress) ? (
                 <div className="flex justify-start items-center">
@@ -334,10 +353,13 @@ export const GithubSuperfluidPool = ({
                 </>
               )}
             </div>
-
+            <hr></hr>
+            <h2>
+              <center>For Admin</center>
+            </h2>
             {/*set member unit */}
             <div className="space-y-2">
-              <div className="badge badge-primary">Set Member Unit</div>
+              <div className="badge badge-primary">Set Member Unit/Only Repo Owner</div>
               <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
                 Update Member Units
               </button>
@@ -345,7 +367,7 @@ export const GithubSuperfluidPool = ({
 
             {/* create pool */}
             <div className="space-y-2">
-              <div className="badge badge-primary">Create Pool</div>
+              <div className="badge badge-primary">Create Pool/Only Repo Owner</div>
               <button
                 className="w-full flex mx-auto btn btn-accent"
                 disabled={isCreatePoolLoading}

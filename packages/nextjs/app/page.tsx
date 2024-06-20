@@ -28,6 +28,7 @@ const Home: NextPage = () => {
               ethAddress: repoAddress.eth_addr,
               distributionRulesJSON: distributionRules.distribution_rules_json,
               distributionRulesMD: distributionRules.distribution_rules_md,
+              poolAddress: distributionRules.pool_addr,
             };
           }),
         );

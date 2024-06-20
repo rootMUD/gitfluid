@@ -28,6 +28,7 @@ export interface DistributionRulesJSON {
 export interface Repo {
   title: string;
   description: string;
+  poolAddress: string;
   ethAddress: string;
   distributionRulesJSON: DistributionRulesJSON;
   distributionRulesMD: string;
