@@ -248,7 +248,7 @@ export const GithubSuperfluidPool = ({
               <center>For Donator</center>
             </h2>
             <div className="space-y-2">
-              <div className="badge badge-primary">Distribute by Stream Way</div>
+              <div className="badge badge-primary">Donate by Stream Way</div>
 
               <p className="m-0">
                 <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
@@ -271,14 +271,14 @@ export const GithubSuperfluidPool = ({
                   onClick={distributeFlow}
                   className="btn btn-success btn-outline ml-2"
                 >
-                  Distribute
+                  Donate
                 </button>
               </div>
             </div>
 
             {/* distribute amount*/}
             <div className="space-y-2">
-              <div className="badge badge-primary">Distribute Directly</div>
+              <div className="badge badge-primary">Donate Directly</div>
               <Image
                 src="/assets/superfluid_distribution_instance.gif"
                 alt="Superfluid Distribution Instance"
@@ -306,7 +306,7 @@ export const GithubSuperfluidPool = ({
                   onClick={distributeAmountToPool}
                   className="btn btn-success btn-outline ml-2"
                 >
-                  Distribute
+                  Donate
                 </button>
               </div>
             </div>
