@@ -2,6 +2,7 @@ import Link from "next/link";
 import { GithubSuperfluid } from "./GithubSuperfliud";
 import { EthereumCircleColorful } from "@ant-design/web3-icons";
 import "github-markdown-css";
+import { useTheme } from "next-themes";
 import ReactMarkdown from "react-markdown";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/components/ui/card";
 
@@ -37,10 +38,15 @@ interface GithubShowProps {
 }
 
 export function GithubShow({ repositories }: GithubShowProps) {
+  const { theme } = useTheme();
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 md:p-8 lg:p-10">
       {repositories.map((repo, index) => (
-        <Card key={index} className="h-[36rem] overflow-y-scroll" style={{ scrollbarColor: "#385183 black" }}>
+        <Card
+          key={index}
+          className="h-[36rem] overflow-y-auto overflow-x-hidden"
+          style={theme === "dark" ? { scrollbarColor: "#385183 black" } : { scrollbarColor: "#93BBFB white" }}
+        >
           <CardHeader className="flex items-start justify-between">
             <div className="space-y-1">
               <CardTitle className="text-center uppercase">{repo.title}</CardTitle>

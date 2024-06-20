@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GithubSuperfluidStreamCreate } from "./GithubSuperfluidStreamCreate";
 import "github-markdown-css";
+import { useTheme } from "next-themes";
 import { parseEther } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
@@ -14,6 +15,7 @@ export const GithubSuperfluidStream = ({
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
   const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+  const { theme } = useTheme();
   const [totalFlowRate, setTotalFlowRate] = useState("");
   const [donateFlowRateInput, setDonateFlowRateInput] = useState("");
   const [donateFlowRate, setDonateFlowRate] = useState(0n);
@@ -129,8 +131,9 @@ export const GithubSuperfluidStream = ({
   return (
     <div className="mt-5 space-y-5">
       {/* donate superfluid stream */}
-      {senderAddress && senderAddress !== repoAddress && (
+      {senderAddress && (
         <>
+          <div className="badge badge-primary">Donate Superfluid Stream</div>
           <p className="m-0">
             <span className="text-blue-500">Current Donate Flow Rate:</span>
             {readLoading ? (
@@ -140,34 +143,27 @@ export const GithubSuperfluidStream = ({
             ) : (
               <span className="block text-center ">
                 {!flowRateReadData && flowRateReadData !== 0n && "UNKNOW"}
-                {flowRateReadData === 0n && "0 wei RMUDx/s"}
+                {flowRateReadData === 0n && "There is no donate stream yet."}
                 {flowRateReadData && flowRateReadData > 0n && flowRateReadData.toString() + "wei RMUDx/s"}
               </span>
             )}
           </p>
           {flowRateReadData === 0n && (
             <p className="m-0">
-              <span className="text-blue-500">Flow Rate Donate Calculated:</span>
+              <span className="text-blue-500">Flow Rate Donate Typed Calculated:</span>
               <span className="block text-center">{donateFlowRate.toString() + "wei RMUDx/s"}</span>
             </p>
           )}
-          {/* <p className="m-0 flex">
-            <span className="text-blue-500">TX Pendding Status:</span>
-            {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowLoading || isCreateFlowLoading) && (
-              <span className="loading loading-dots loading-md"></span>
-            )}
-            {(isCreateFlowIdle || isRemoveFlowIdle) && (isRemoveFlowSuccess || isCreateFlowSuccess) && <SuccessIcon />}
-          </p> */}
           <div className="flex items-center justify-center">
             {flowRateReadData === 0n && (
               <>
-                <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
                   <input
                     value={donateFlowRateInput}
                     onChange={e => setDonateFlowRateInput(e.target.value)}
                     type="text"
                     placeholder="Type Flow Rate"
-                    className="!bg-[#385183] grow w-[6rem]"
+                    className="dark:!bg-[#385183] grow w-[6rem]"
                   />
                   RMUDx/Day
                 </label>
@@ -193,19 +189,20 @@ export const GithubSuperfluidStream = ({
         </>
       )}
       {/* create stream */}
-      {senderAddress && senderAddress !== repoAddress && (
+      {senderAddress && (
         <>
-          <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[18rem]">
+          <div className="badge badge-primary">Create Stream</div>
+          <label className="w-full input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto">
             <input
               value={totalFlowRate}
               onChange={e => setTotalFlowRate(e.target.value)}
               type="text"
               placeholder="Type here total flow rate"
-              className="!bg-[#385183] grow"
+              className="dark:!bg-[#385183] grow"
             />
             RMUDx/Day
           </label>
-          <button className="flex mx-auto btn btn-primary" onClick={openStreamInfoModal}>
+          <button className="flex mx-auto w-full btn btn-primary" onClick={openStreamInfoModal}>
             View Calculated Stream Flow Rate Info
           </button>
           <button onClick={openModalToSubmitTx} className="w-full flex mx-auto btn btn-accent">
@@ -214,43 +211,48 @@ export const GithubSuperfluidStream = ({
         </>
       )}
       <dialog ref={modalRef} className="modal">
-        <div className="modal-box overflow-y-scroll">
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-          </form>
-          <h3 className="font-bold text-center text-lg">Create Stream</h3>
-          <p className="m-0">total flow rate:</p>
-          <p className="mt-0">
-            {((isNaN(parseFloat(totalFlowRate)) ? 0n : parseEther(totalFlowRate)) / (24n * 60n * 60n)).toString() +
-              "wei RMUDx/s"}
-          </p>
+        <div className="modal-box overflow-hidden py-[0.5rem] pr-[2rem]">
+          <div
+            className="overflow-y-auto max-h-[calc(100vh-6rem)]"
+            style={theme === "dark" ? { scrollbarColor: "black #385183" } : { scrollbarColor: "#93BBFB white" }}
+          >
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 className="font-bold text-center mt-3 text-lg">Create Stream</h3>
+            <p className="m-0">total flow rate:</p>
+            <p className="mt-0">
+              {((isNaN(parseFloat(totalFlowRate)) ? 0n : parseEther(totalFlowRate)) / (24n * 60n * 60n)).toString() +
+                "wei RMUDx/s"}
+            </p>
 
-          <ul className="break-all list-none space-y-5">
-            {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
-              return (
-                <li className="bg-base-300 p-5 rounded-box" key={index}>
-                  <p className="m-0">
-                    <span className="text-blue-500">{`receiver${index + 1}:`}</span>
-                    {`${receiverAddress}`}
-                  </p>
-                  <p className="m-0">
-                    <span className="text-blue-500">flow rate ratio:</span>
-                    {`${flowRateRatio}`}
-                  </p>
+            <ul className="break-all list-none mb-5 space-y-5">
+              {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
+                return (
+                  <li className="bg-base-300 p-5 rounded-box" key={index}>
+                    <p className="m-0">
+                      <span className="text-blue-500">{`receiver${index + 1}:`}</span>
+                      {`${receiverAddress}`}
+                    </p>
+                    <p className="m-0">
+                      <span className="text-blue-500">flow rate ratio:</span>
+                      {`${flowRateRatio}`}
+                    </p>
 
-                  <GithubSuperfluidStreamCreate
-                    ref={ref => {
-                      flowRateRatioRefs.current.set(receiverAddress, ref);
-                    }}
-                    receiver={receiverAddress}
-                    totalFlowRate={totalFlowRate}
-                    flowRateRatio={flowRateRatio}
-                  />
-                </li>
-              );
-            })}
-          </ul>
+                    <GithubSuperfluidStreamCreate
+                      ref={ref => {
+                        flowRateRatioRefs.current.set(receiverAddress, ref);
+                      }}
+                      receiver={receiverAddress}
+                      totalFlowRate={totalFlowRate}
+                      flowRateRatio={flowRateRatio}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>
@@ -258,7 +260,10 @@ export const GithubSuperfluidStream = ({
       </dialog>
 
       <dialog ref={streamInfoModalRef} className="modal">
-        <div className="modal-box overflow-y-scroll">
+        <div
+          className="modal-box overflow-y-auto "
+          style={theme === "dark" ? { scrollbarColor: "black #385183" } : { scrollbarColor: "#93BBFB white" }}
+        >
           <form method="dialog">
             {/* if there is a button in form, it will close the modal */}
             <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>

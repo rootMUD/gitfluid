@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { GithubSuperfluidPoolMemberUnitUpdate } from "./GithubSuperfliudPoolMemberUpdate";
-import { gql, useQuery } from "@apollo/client";
 import "github-markdown-css";
+import { useTheme } from "next-themes";
 import { parseEther } from "viem";
 import { decodeFunctionResult } from "viem";
 import { useAccount } from "wagmi";
@@ -9,18 +9,6 @@ import contractABI from "~~/contracts/externalContracts";
 import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 import { notification } from "~~/utils/scaffold-eth";
 
-interface PoolCreatedInfo {
-  id: string;
-  totalUnits: string;
-  totalMembers: number;
-  flowRate: string;
-  createdAtBlockNumber: string;
-  token: {
-    id: string;
-    isSuperToken: boolean;
-    symbol: string;
-  };
-}
 export const GithubSuperfluidPool = ({
   repoAddress,
   flowRateRatioMap,
@@ -29,65 +17,56 @@ export const GithubSuperfluidPool = ({
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
   const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+  const POOL_ADDRESS = "0x3185F89934AE3d894a60d0fBe49384eabFC18135";
+  /** moke pool for test */
+  // const POOL_ADDRESS = "0xCF0Eaf51b5F7bA7cC2BF672dc05EBb6B4579d536";
+  const { theme } = useTheme();
   const { address: senderAddress } = useAccount();
   const [distributeFlowRateInput, setDistributeFlowRateInput] = useState("");
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
-  const [poolAddress, setPoolAddress] = useState("");
+  const [distributeAmountInput, setDistributeAmountInput] = useState<string>("");
+  const [distributeAmount, setDistributeAmount] = useState(0n);
   const {
-    writeContractAsync: createPoolWriteAsync,
-    isSuccess: isCreatePoolSuccess,
-    isPending: isCreatePoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    writeContractAsync: connectPoolWriteAsync,
-    isSuccess: isConnectPoolSuccess,
-    isPending: isConnectPoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    writeContractAsync: disconnectPoolWriteAsync,
-    isSuccess: isDisconnectPoolSuccess,
-    isPending: isDisconnectPoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
+    refetch: distributionFlowRateRefrech,
+    isFetching: readDistributionFlowRateLoading,
+    data: distributionFlowRateReadData,
+  } = useScaffoldReadContract({
+    contractName: "GDAv1Forwarder",
+    functionName: "getFlowDistributionFlowRate",
+    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS],
+  });
+  const { writeContractAsync: createPoolWriteAsync, isPending: isCreatePoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: connectPoolWriteAsync, isPending: isConnectPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: disconnectPoolWriteAsync, isPending: isDisconnectPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
 
+  const { writeContractAsync: distributeWriteAsync, isPending: isDistributePoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: distributeAmountWriteAsync, isPending: isDistributeAmountPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
   const {
-    writeContractAsync: distributeWriteAsync,
-    isSuccess: isDistributePoolSuccess,
-    isPending: isDistributePoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
-  const {
-    refetch,
+    refetch: isMemberConnectedRefetch,
     isFetching: isConnectReadLoading,
     data: isConnectReadData,
   } = useScaffoldReadContract({
     contractName: "GDAv1Forwarder",
     functionName: "isMemberConnected",
-    args: [poolAddress, senderAddress],
+    args: [POOL_ADDRESS, senderAddress],
   });
-  const GET_POOL_CREATED = gql`
-    query MyQuery {
-      pools(first: 10, where: { admin: "${senderAddress?.toLocaleLowerCase()}" }) {
-        id  
-        totalUnits
-        totalMembers
-        flowRate
-        createdAtBlockNumber
-        token {
-          id
-          isSuperToken
-          symbol
-        }
-      }
-    }
-  `;
-  const {
-    loading: getCreatedPoolsInfoLoading,
-    data: createdPoolsInfo,
-  }: { loading: boolean; data: { pools: PoolCreatedInfo[] } | undefined } = useQuery(GET_POOL_CREATED);
 
-  console.log("get createdPoolsInfo", createdPoolsInfo, GET_POOL_CREATED.loc?.source.body);
   const modalRef = useRef<HTMLDialogElement>(null);
 
   const createPool = () => {
+    if (!senderAddress || senderAddress !== repoAddress) {
+      return notification.error(
+        `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
+          repoAddress.length - 4,
+          repoAddress.length,
+        )} can create pool.`,
+      );
+    }
     createPoolWriteAsync(
       {
         functionName: "createPool",
@@ -96,7 +75,7 @@ export const GithubSuperfluidPool = ({
           senderAddress,
           {
             transferabilityForUnitsOwner: false,
-            distributionFromAnyAddress: false,
+            distributionFromAnyAddress: true,
           },
         ],
       },
@@ -106,13 +85,13 @@ export const GithubSuperfluidPool = ({
           const createdPoolAddressData = txnReceipt.logs.find(
             log => log.topics[0] === "0x9c5d829b9b23efc461f9aeef91979ec04bb903feb3bee4f26d22114abfc7335b",
           )?.data;
-          if (!poolAddress && createdPoolAddressData) {
+          if (createdPoolAddressData) {
             const createdPoolAddress = decodeFunctionResult({
               abi: contractABI[10].GDAv1Forwarder.abi,
               functionName: "createPool",
               data: createdPoolAddressData,
             });
-            setPoolAddress(createdPoolAddress as string);
+            console.log(`Created pool address: ${createdPoolAddress}`);
           }
         },
       },
@@ -120,39 +99,66 @@ export const GithubSuperfluidPool = ({
   };
 
   const connectPool = () => {
+    if (!senderAddress || ![...flowRateRatioMap.keys()].includes(senderAddress)) {
+      return notification.error("This Account is not the pool member.");
+    }
+
     connectPoolWriteAsync(
       {
         functionName: "connectPool",
-        args: [senderAddress, "0x0"],
+        args: [POOL_ADDRESS, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          isMemberConnectedRefetch();
         },
       },
     );
   };
 
   const disconnectPool = () => {
+    if (!senderAddress || ![...flowRateRatioMap.keys()].includes(senderAddress)) {
+      return notification.error("This Account is not the pool member.");
+    }
     disconnectPoolWriteAsync(
       {
         functionName: "disconnectPool",
-        args: [poolAddress, "0x0"],
+        args: [POOL_ADDRESS, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+          isMemberConnectedRefetch();
         },
       },
     );
   };
 
   const distributeFlow = () => {
-    if (distributeFlowRate > 0n) {
+    if (distributeFlowRate >= 0n) {
       distributeWriteAsync(
         {
           functionName: "distributeFlow",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, poolAddress, distributeFlowRate, "0x0"],
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeFlowRate, "0x0"],
+        },
+        {
+          onBlockConfirmation: txnReceipt => {
+            console.log("📦 Transaction blockHash", txnReceipt.blockHash);
+            distributionFlowRateRefrech();
+          },
+        },
+      );
+    } else {
+      notification.error("Please set right donate flow rate.");
+    }
+  };
+  const distributeAmountToPool = () => {
+    if (distributeAmount > 0n) {
+      distributeAmountWriteAsync(
+        {
+          functionName: "distribute",
+          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeAmount, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -161,11 +167,19 @@ export const GithubSuperfluidPool = ({
         },
       );
     } else {
-      notification.error("Please set right donate flow rate.");
+      notification.error("Please set right donate amount.");
     }
   };
 
   const openUpdateMemberUnitsModel = () => {
+    if (!senderAddress || senderAddress !== repoAddress) {
+      return notification.error(
+        `Just the repo owner: ${repoAddress.slice(0, 4)}...${repoAddress.slice(
+          repoAddress.length - 4,
+          repoAddress.length,
+        )} can set member unit.`,
+      );
+    }
     modalRef.current && modalRef.current.showModal();
   };
 
@@ -175,103 +189,199 @@ export const GithubSuperfluidPool = ({
       const donateFlowRateWei = parseEther(flowRateNumber.toString());
       const flowRate = donateFlowRateWei / (24n * 60n * 60n);
       setDistributeFlowRate(flowRate);
-      console.log(`flowRate for ${repoAddress}: ${flowRate}`);
+      console.log(`donate flowRate for ${repoAddress}: ${flowRate}`);
     } else {
       setDistributeFlowRate(0n);
     }
   }, [distributeFlowRateInput]);
 
   useEffect(() => {
-    if (createdPoolsInfo && createdPoolsInfo.pools && createdPoolsInfo.pools.length) {
-      setPoolAddress(createdPoolsInfo.pools[0]?.id);
+    if (distributeAmountInput && !isNaN(parseFloat(distributeAmountInput))) {
+      const flowRateNumber = parseFloat(distributeAmountInput);
+      const donateAmountWei = parseEther(flowRateNumber.toString());
+      setDistributeAmount(donateAmountWei);
+      console.log(`donate amount for ${repoAddress}: ${donateAmountWei}`);
+    } else {
+      setDistributeAmount(0n);
     }
-  }, [createdPoolsInfo]);
+  }, [distributeAmountInput]);
 
   useEffect(() => {
     if (senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress)) {
-      refetch();
+      isMemberConnectedRefetch();
     }
-  }, [poolAddress, senderAddress]);
+  }, [senderAddress]);
+
   return (
     <>
       <div className="mt-5 space-y-5">
-        {getCreatedPoolsInfoLoading && <div>Loading...</div>}
-        {isConnectReadLoading && <div>Get connect pool status loading...</div>}
-        {poolAddress && (
-          <div>
-            <h3>Created Pool Address:</h3>
-            <p className="break-all">{poolAddress}</p>
-            {senderAddress && [...flowRateRatioMap.keys()].includes(senderAddress) && (
-              <p> Current account connected:{isConnectReadData ? "true" : "false"}</p>
+        {/* pool info */}
+        <div>
+          <h3 className="text-blue-500">Pool Address:</h3>
+          <p className="text-center break-all">{POOL_ADDRESS}</p>
+          <p className="m-0">
+            <span className="text-blue-500">Current Flow Rate With Pool:</span>
+            {readDistributionFlowRateLoading ? (
+              <span className="flex justify-center items-center">
+                <span className="loading loading-dots loading-md text-center"></span>
+              </span>
+            ) : (
+              <span className="block text-center ">
+                {!distributionFlowRateReadData && distributionFlowRateReadData !== 0n && "UNKNOW"}
+                {distributionFlowRateReadData ||
+                  (distributionFlowRateReadData == 0n && distributionFlowRateReadData.toString() + "wei RMUDx/s")}
+              </span>
             )}
-          </div>
-        )}
-        {!getCreatedPoolsInfoLoading && poolAddress && (
-          <div className="flex items-center justify-center">
-            <label className="input !bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-[16rem]">
-              <input
-                value={distributeFlowRateInput}
-                onChange={e => setDistributeFlowRateInput(e.target.value)}
-                type="text"
-                placeholder="Type Flow Rate"
-                className="!bg-[#385183] grow w-[6rem]"
-              />
-              RMUDx/Day
-            </label>
-            <button
-              disabled={isDistributePoolLoading}
-              onClick={distributeFlow}
-              className="btn btn-success btn-outline ml-2"
-            >
-              Distribute
-            </button>
-          </div>
-        )}
-        {senderAddress &&
-          [...flowRateRatioMap.keys()].includes(senderAddress) &&
-          (isConnectReadData ? (
-            <button className="w-full flex mx-auto btn btn-primary" onClick={disconnectPool}>
-              Disconnect Pool
-            </button>
-          ) : (
-            <button className="w-full flex mx-auto btn btn-primary" onClick={connectPool}>
-              Connect Pool
-            </button>
-          ))}
+          </p>
+        </div>
+        {senderAddress && (
+          <>
+            {/* distribute flow*/}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Distribute Flow</div>
 
-        {/* member unit */}
-        {repoAddress === senderAddress &&
-          !getCreatedPoolsInfoLoading &&
-          (poolAddress ? (
-            <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
-              Update Member Units
-            </button>
-          ) : (
-            <button className="w-full flex mx-auto btn btn-accent" onClick={createPool}>
-              Create Pool
-            </button>
-          ))}
+              <p className="m-0">
+                <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
+                <span className="block text-center">{distributeFlowRate.toString() + "wei RMUDx/s"}</span>
+              </p>
+
+              <div className="flex items-center justify-center">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
+                  <input
+                    value={distributeFlowRateInput}
+                    onChange={e => setDistributeFlowRateInput(e.target.value)}
+                    type="text"
+                    placeholder="Type Flow Rate"
+                    className="dark:!bg-[#385183] grow w-[6rem]"
+                  />
+                  RMUDx/Day
+                </label>
+                <button
+                  disabled={isDistributePoolLoading}
+                  onClick={distributeFlow}
+                  className="btn btn-success btn-outline ml-2"
+                >
+                  Distribute
+                </button>
+              </div>
+            </div>
+
+            {/* distribute amount*/}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Distribute Amount</div>
+              <p className="m-0">
+                <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
+                <span className="block text-center">{distributeAmount.toString() + "wei RMUDx"}</span>
+              </p>
+              <div className="flex items-center justify-center">
+                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
+                  <input
+                    value={distributeAmountInput}
+                    onChange={e => setDistributeAmountInput(e.target.value)}
+                    type="text"
+                    placeholder="Type Amount"
+                    className="dark:!bg-[#385183] grow w-[6rem]"
+                  />
+                  RMUDx
+                </label>
+                <button
+                  disabled={isDistributeAmountPoolLoading}
+                  onClick={distributeAmountToPool}
+                  className="btn btn-success btn-outline ml-2"
+                >
+                  Distribute
+                </button>
+              </div>
+            </div>
+
+            {/* connect/disconnect pool */}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Connect/Disconnect Pool</div>
+
+              {[...flowRateRatioMap.keys()].includes(senderAddress) ? (
+                <div className="flex justify-start items-center">
+                  <span className="text-blue-500">Current account connected:</span>
+                  {isConnectReadLoading ? (
+                    <span className="loading loading-dots loading-md text-center"></span>
+                  ) : isConnectReadData ? (
+                    "true"
+                  ) : (
+                    "false"
+                  )}
+                </div>
+              ) : (
+                <p className="text-blue-500">You are not the pool member yet</p>
+              )}
+              {isConnectReadData ? (
+                <>
+                  <button
+                    className="w-full flex mx-auto btn btn-primary"
+                    disabled={isDisconnectPoolLoading}
+                    onClick={disconnectPool}
+                  >
+                    Disconnect Pool
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className="w-full flex mx-auto btn btn-primary"
+                    disabled={isConnectPoolLoading}
+                    onClick={connectPool}
+                  >
+                    Connect Pool
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/*set member unit */}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Set Member Unit</div>
+              <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
+                Update Member Units
+              </button>
+            </div>
+
+            {/* create pool */}
+            <div className="space-y-2">
+              <div className="badge badge-primary">Create Pool</div>
+              <button
+                className="w-full flex mx-auto btn btn-accent"
+                disabled={isCreatePoolLoading}
+                onClick={createPool}
+              >
+                Create Pool
+              </button>
+            </div>
+          </>
+        )}
       </div>
       <dialog ref={modalRef} className="modal">
-        <div className="modal-box overflow-y-scroll">
-          <form method="dialog">
-            {/* if there is a button in form, it will close the modal */}
-            <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-          </form>
-          <h3 className="font-bold text-center text-lg">Update Member Units</h3>
-          <ul className="break-all list-none space-y-5">
-            {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
-              return (
-                <li className="bg-base-300 p-5 rounded-box" key={index}>
-                  <GithubSuperfluidPoolMemberUnitUpdate
-                    poolAddress={poolAddress}
-                    receiver={receiverAddress}
-                    flowRateRatio={flowRateRatio}
-                  />
-                </li>
-              );
-            })}
-          </ul>
+        <div className="modal-box overflow-hidden py-[0.5rem] pr-[2rem]">
+          <div
+            className="overflow-y-auto max-h-[calc(100vh-6rem)]"
+            style={theme === "dark" ? { scrollbarColor: "black #385183" } : { scrollbarColor: "#93BBFB white" }}
+          >
+            <form method="dialog">
+              {/* if there is a button in form, it will close the modal */}
+              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <h3 className="font-bold text-center mt-3 text-lg">Update Member Units</h3>
+            <ul className="break-all mb-5 list-none space-y-5">
+              {[...flowRateRatioMap.values()].map(({ flowRateRatio, receiverAddress }, index) => {
+                return (
+                  <li className="bg-base-300 p-5 rounded-box" key={index}>
+                    <GithubSuperfluidPoolMemberUnitUpdate
+                      poolAddress={POOL_ADDRESS}
+                      receiver={receiverAddress}
+                      flowRateRatio={flowRateRatio}
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
         </div>
         <form method="dialog" className="modal-backdrop">
           <button>close</button>

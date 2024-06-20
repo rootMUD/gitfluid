@@ -9,11 +9,8 @@ export const GithubSuperfluidPoolMemberUnitUpdate = ({
   flowRateRatio: number;
   poolAddress: string;
 }) => {
-  const {
-    writeContractAsync: updateMemberUnitsWriteAsync,
-    isSuccess: isUpdateMemberUnitsPoolSuccess,
-    isPending: isUpdateMemberUnitsPoolLoading,
-  } = useScaffoldWriteContract("GDAv1Forwarder");
+  const { writeContractAsync: updateMemberUnitsWriteAsync, isPending: isUpdateMemberUnitsPoolLoading } =
+    useScaffoldWriteContract("GDAv1Forwarder");
 
   const updateMemberUnits = () => {
     updateMemberUnitsWriteAsync(
@@ -42,7 +39,11 @@ export const GithubSuperfluidPoolMemberUnitUpdate = ({
         <span className="text-blue-500">unit:</span>
         {`${flowRateRatio * 100}`}
       </p>
-      <button className="mt-5 btn mx-auto w-full btn-sm" onClick={updateMemberUnits}>
+      <button
+        className="mt-5 btn mx-auto w-full btn-sm"
+        disabled={isUpdateMemberUnitsPoolLoading}
+        onClick={updateMemberUnits}
+      >
         Update Member Units
       </button>
     </>
