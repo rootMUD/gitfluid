@@ -80,7 +80,7 @@ Run smart contract test with `yarn hardhat:test`
 
 ## Distribution Rules
 
-> Pool Addr: 0xa132a33bb6ed51085d376b3cc90c7723171ebb79
+> Pool Addr: 0x9d11178aF4b363D50E66672bFd3487AEEb98c0B0
 
 * Contributors - 70%
 
