@@ -1,5 +1,7 @@
 # 🏗 Gitfluid
 
+Distribute tokens for GitHub repos and contributors by stream way based on `README.md`
+
 <h4 align="center">
   <a href="https://gitfluid.rootmud.xyz"> -[ Lanuch App ]- </a>
 </h4>
