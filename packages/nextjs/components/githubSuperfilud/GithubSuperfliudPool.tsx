@@ -20,7 +20,7 @@ export const GithubSuperfluidPool = ({
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
   // TODO: make this dynamic from .env
-  const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+  const NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT = "0xfA91DF95b094C7461A625067A4d7af98591AE60c";
   console.log("poolAddr", poolAddress);
   // DONE: updated the POOL_ADDRESS with get dynamically from the README.md
   const POOL_ADDRESS = poolAddress;
@@ -39,7 +39,7 @@ export const GithubSuperfluidPool = ({
   } = useScaffoldReadContract({
     contractName: "GDAv1Forwarder",
     functionName: "getFlowDistributionFlowRate",
-    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS],
+    args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS],
   });
   const { writeContractAsync: createPoolWriteAsync, isPending: isCreatePoolLoading } =
     useScaffoldWriteContract("GDAv1Forwarder");
@@ -77,7 +77,7 @@ export const GithubSuperfluidPool = ({
       {
         functionName: "createPool",
         args: [
-          NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT,
+          NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT,
           senderAddress,
           {
             transferabilityForUnitsOwner: false,
@@ -146,7 +146,7 @@ export const GithubSuperfluidPool = ({
       distributeWriteAsync(
         {
           functionName: "distributeFlow",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeFlowRate, "0x0"],
+          args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeFlowRate, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -164,7 +164,7 @@ export const GithubSuperfluidPool = ({
       distributeAmountWriteAsync(
         {
           functionName: "distribute",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeAmount, "0x0"],
+          args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, POOL_ADDRESS, distributeAmount, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -235,7 +235,7 @@ export const GithubSuperfluidPool = ({
               <span className="block text-center ">
                 {!distributionFlowRateReadData && distributionFlowRateReadData !== 0n && "UNKNOW"}
                 {distributionFlowRateReadData ||
-                  (distributionFlowRateReadData == 0n && distributionFlowRateReadData.toString() + "wei RMUDx/s")}
+                  (distributionFlowRateReadData == 0n && distributionFlowRateReadData.toString() + "wei LeeDuckGoX/s")}
               </span>
             )}
           </p>
@@ -252,7 +252,7 @@ export const GithubSuperfluidPool = ({
 
               <p className="m-0">
                 <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
-                <span className="block text-center">{distributeFlowRate.toString() + "wei RMUDx/s"}</span>
+                <span className="block text-center">{distributeFlowRate.toString() + "wei LeeDuckGoX/s"}</span>
               </p>
 
               <div className="flex items-center justify-center">
@@ -264,7 +264,7 @@ export const GithubSuperfluidPool = ({
                     placeholder="Type Flow Rate"
                     className="dark:!bg-[#385183] grow w-[6rem]"
                   />
-                  RMUDx/Day
+                  LeeDuckGoX/Day
                 </label>
                 <button
                   disabled={isDistributePoolLoading}
@@ -288,7 +288,7 @@ export const GithubSuperfluidPool = ({
               />
               <p className="m-0">
                 <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
-                <span className="block text-center">{distributeAmount.toString() + "wei RMUDx"}</span>
+                <span className="block text-center">{distributeAmount.toString() + "wei LeeDuckGoX"}</span>
               </p>
               <div className="flex items-center justify-center">
                 <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
@@ -299,7 +299,7 @@ export const GithubSuperfluidPool = ({
                     placeholder="Type Amount"
                     className="dark:!bg-[#385183] grow w-[6rem]"
                   />
-                  RMUDx
+                  LeeDuckGoX
                 </label>
                 <button
                   disabled={isDistributeAmountPoolLoading}

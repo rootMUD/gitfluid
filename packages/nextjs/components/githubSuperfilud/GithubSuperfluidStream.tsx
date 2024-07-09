@@ -14,7 +14,7 @@ export const GithubSuperfluidStream = ({
   repoAddress: string;
   flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
 }) => {
-  const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+  const NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
   const { theme } = useTheme();
   const [totalFlowRate, setTotalFlowRate] = useState("");
   const [donateFlowRateInput, setDonateFlowRateInput] = useState("");
@@ -40,7 +40,7 @@ export const GithubSuperfluidStream = ({
   } = useScaffoldReadContract({
     contractName: "CFAv1Forwarder",
     functionName: "getFlowrate",
-    args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress],
+    args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, repoAddress],
   });
   console.log(`flowRateReadData: ${flowRateReadData}`);
   useEffect(() => {
@@ -75,7 +75,7 @@ export const GithubSuperfluidStream = ({
       CreateFlowWriteAsync(
         {
           functionName: "createFlow",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, donateFlowRate, "0x0"],
+          args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, repoAddress, donateFlowRate, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -93,7 +93,7 @@ export const GithubSuperfluidStream = ({
     removeStreamWriteAsync(
       {
         functionName: "deleteFlow",
-        args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
+        args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {
@@ -144,14 +144,14 @@ export const GithubSuperfluidStream = ({
               <span className="block text-center ">
                 {!flowRateReadData && flowRateReadData !== 0n && "UNKNOW"}
                 {flowRateReadData === 0n && "There is no donate stream yet."}
-                {flowRateReadData && flowRateReadData > 0n && flowRateReadData.toString() + "wei RMUDx/s"}
+                {flowRateReadData && flowRateReadData > 0n && flowRateReadData.toString() + "wei LeeDuckGoX/s"}
               </span>
             )}
           </p>
           {flowRateReadData === 0n && (
             <p className="m-0">
               <span className="text-blue-500">Flow Rate Donate Typed Calculated:</span>
-              <span className="block text-center">{donateFlowRate.toString() + "wei RMUDx/s"}</span>
+              <span className="block text-center">{donateFlowRate.toString() + "wei LeeDuckGoX/s"}</span>
             </p>
           )}
           <div className="flex items-center justify-center">
@@ -165,7 +165,7 @@ export const GithubSuperfluidStream = ({
                     placeholder="Type Flow Rate"
                     className="dark:!bg-[#385183] grow w-[6rem]"
                   />
-                  RMUDx/Day
+                  LeeDuckGoX/Day
                 </label>
                 <button
                   disabled={isCreateFlowLoading}
@@ -200,7 +200,7 @@ export const GithubSuperfluidStream = ({
               placeholder="Type here total flow rate"
               className="dark:!bg-[#385183] grow"
             />
-            RMUDx/Day
+            LeeDuckGoX/Day
           </label>
           <button className="flex mx-auto w-full btn btn-primary" onClick={openStreamInfoModal}>
             View Calculated Stream Flow Rate Info
@@ -224,7 +224,7 @@ export const GithubSuperfluidStream = ({
             <p className="m-0">total flow rate:</p>
             <p className="mt-0">
               {((isNaN(parseFloat(totalFlowRate)) ? 0n : parseEther(totalFlowRate)) / (24n * 60n * 60n)).toString() +
-                "wei RMUDx/s"}
+                "wei LeeDuckGoX/s"}
             </p>
 
             <ul className="break-all list-none mb-5 space-y-5">
@@ -272,7 +272,7 @@ export const GithubSuperfluidStream = ({
           <p className="m-0">total flow rate:</p>
           <p className="mt-0">
             {((isNaN(parseFloat(totalFlowRate)) ? 0n : parseEther(totalFlowRate)) / (24n * 60n * 60n)).toString() +
-              "wei RMUDx/s"}
+              "wei LeeDuckGoX/s"}
           </p>
           <p className="m-0 break-all">
             <span className="text-blue-500">sender:</span>

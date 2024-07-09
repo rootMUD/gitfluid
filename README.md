@@ -18,9 +18,13 @@ Distribute tokens for GitHub repos and contributors by stream way based on `READ
 >
 > https://docs.superfluid.finance/docs/protocol/distributions/overview
 
-Test Token RMUDx: 
+Test Token RMUDX: 
 
 > https://optimistic.etherscan.io/address/0xaf921d3d5a903f8b658aeaebed7a30b3dbb5b7bc
+
+Autually Token LeeDuckGoX: 
+
+> https://optimistic.etherscan.io/address/0xfA91DF95b094C7461A625067A4d7af98591AE60c
 
 🐆 Stream and distribute tokens for GitHub repos and contributors! 
 

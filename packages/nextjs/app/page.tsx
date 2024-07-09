@@ -9,11 +9,19 @@ import { GithubShow } from "~~/components/githubSuperfilud/GithubShow";
 const Home: NextPage = () => {
   const [repositories, setRepositories] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [repoLink, setRepoLink] = useState("https://github.com/rootMUD/gitfluid/");
 
-  const loadRepositories = async () => {
+  const loadRepositories = async (repoLink = "") => {
     setLoading(true);
     try {
-      const repos = await fetchRepos();
+      let repos = [];
+      if (repoLink) {
+        const [owner, name] = repoLink.split("/").slice(-2);
+        repos = [{ owner, name }];
+      } else {
+        repos = await fetchRepos();
+      }
+
       if (repos && repos.length > 0) {
         const repoDetails = await Promise.all(
           repos.map(async (repo: { owner: any; name: any }) => {
@@ -46,12 +54,34 @@ const Home: NextPage = () => {
   useEffect(() => {
     loadRepositories();
   }, []);
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRepoLink(event.target.value);
+  };
+
+  const handleLoadRepo = () => {
+    loadRepositories(repoLink);
+  };
+
   const client = new ApolloClient({
     uri: "https://optimism-mainnet.subgraph.x.superfluid.dev",
     cache: new InMemoryCache(),
   });
+
   return (
     <>
+      <div className="flex justify-center items-center my-4">
+        <input
+          type="text"
+          value={repoLink}
+          onChange={handleInputChange}
+          placeholder="Enter GitHub repo link (e.g., https://github.com/owner/repo)"
+          className="input input-bordered input-primary w-96"
+        />
+        <button onClick={handleLoadRepo} className="btn btn-primary ml-2">
+          Load Repo
+        </button>
+      </div>
       {loading ? (
         <div className="flex justify-center items-center">
           Loading<span className="loading loading-dots loading-xs"></span>

@@ -15,6 +15,46 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 console.log("Hello from Gitfluid!");
 
+async function fetchGistContentById(gistId) {
+  const githubToken = Deno.env.get("GITHUB_TOKEN"); // Ensure your GitHub token is available in environment variables
+
+  if (!githubToken) {
+    console.error("GitHub token is not set.");
+    return {
+      error: "GitHub token is not set.",
+      content: null
+    };
+  }
+
+  const url = `https://api.github.com/gists/${gistId}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `token ${githubToken}`,
+      Accept: "application/vnd.github.v3+json"
+    },
+  });
+
+  if (!response.ok) {
+    console.error(`Failed to fetch Gist data: ${response.statusText}`);
+    return {
+      error: `Failed to fetch Gist data: ${response.statusText}`,
+      content: null
+    };
+  }
+
+  const gistData = await response.json();
+  // Assuming we want the content of all files in the Gist:
+  const files = Object.values(gistData.files).map(file => ({
+    filename: file.filename,
+    content: file.content
+  }));
+
+  return {
+    error: null,
+    files: files
+  };
+}
+
 function extractOwnerFromUrl(url) {
   const pathParts = new URL(url).pathname.split("/").filter((part) => part);
   return pathParts[0];
@@ -193,9 +233,20 @@ function extractDistributionRulesSection(markdownContent) {
 const router = new Router();
 
 router
+  .get("/gist", async (context) => {
+    const queryParams = context.request.url.searchParams;
+    const id = queryParams.get("id");
+    const result = await fetchGistContentById(id);
+
+    if (result.error) {
+      context.response.status = 500;
+      context.response.body = result.error;
+    } else {
+      context.response.body = { files: result.files };
+    }
+  })
   .get("/repos", async (context) => {
     // * get all the repos.
-
     const supabase = createClient(
       // Supabase API URL - env var exported by default.
       Deno.env.get("SUPABASE_URL") ?? "",

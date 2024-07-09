@@ -94,8 +94,8 @@ export const Header = () => {
           </div>
           <div className="flex flex-col">
             <span className="font-bold leading-tight">🐆 Gitfluid 🐆 </span>
-            <span className="text-xs">Stream and distribute tokens for GitHub repos and contributors!</span>
-            <span className="text-xs">关于 Github 仓库和贡献者的流与分配！</span>
+            <span className="text-xs">Distribute tokens for GitHub repos and contributors by stream way based on README.md</span>
+            <span className="text-xs">基于 README.md 中的规则向 Github 仓库和贡献者分配代币</span>
           </div>
         </Link>
         <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">

@@ -9,7 +9,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
     ref: any,
   ) => {
     const [flowRate, setFlowRate] = useState(0n);
-    const NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
+    const NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT = "0xaf921d3d5a903f8b658aeaebed7a30b3dbb5b7bc";
     useEffect(() => {
       if (totalFlowRate && !isNaN(parseFloat(totalFlowRate)) && flowRateRatio) {
         const flowRateNumber = parseFloat(totalFlowRate) * flowRateRatio;
@@ -28,7 +28,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
     } = useScaffoldReadContract({
       contractName: "CFAv1Forwarder",
       functionName: "getFlowrate",
-      args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver],
+      args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, receiver],
     });
     const { writeContractAsync: createStreamWriteAsync, isPending: isCreateFlowLoading } =
       useScaffoldWriteContract("CFAv1Forwarder");
@@ -40,7 +40,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
         createStreamWriteAsync(
           {
             functionName: "createFlow",
-            args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, "0x0"],
+            args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, "0x0"],
           },
           {
             onBlockConfirmation: txnReceipt => {
@@ -56,7 +56,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
       removeStreamWriteAsync(
         {
           functionName: "deleteFlow",
-          args: [NEXT_PUBLIC_ROOTMUDX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
+          args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -79,13 +79,13 @@ export const GithubSuperfluidStreamCreate = forwardRef(
             </span>
           ) : (
             <span className="block text-center ">
-              {flowRateReadData === 0n ? "0 wei RMUDx/s" : flowRateReadData?.toString() + "wei RMUDx/s"}
+              {flowRateReadData === 0n ? "0 wei LeeDuckGoX/s" : flowRateReadData?.toString() + "wei LeeDuckGoX/s"}
             </span>
           )}
         </p>
         <p className="m-0">
           <span className="text-blue-500">flowRate need to set:</span>
-          <span className="block text-center">{flowRate.toString() + "wei RMUDx/s"}</span>
+          <span className="block text-center">{flowRate.toString() + "wei LeeDuckGoX/s"}</span>
         </p>
         {flowRateReadData === 0n ? (
           <button className="mt-5 btn mx-auto w-full btn-sm" disabled={isCreateFlowLoading} onClick={createStream}>
