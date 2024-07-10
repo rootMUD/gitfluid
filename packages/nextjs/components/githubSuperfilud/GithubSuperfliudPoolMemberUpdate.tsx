@@ -5,9 +5,9 @@ export const GithubSuperfluidPoolMemberUnitUpdate = ({
   flowRateRatio,
   poolAddress,
 }: {
-  receiver: string;
+  receiver: `0x${string}`;
   flowRateRatio: number;
-  poolAddress: string;
+  poolAddress: `0x${string}`;
 }) => {
   const { writeContractAsync: updateMemberUnitsWriteAsync, isPending: isUpdateMemberUnitsPoolLoading } =
     useScaffoldWriteContract("GDAv1Forwarder");

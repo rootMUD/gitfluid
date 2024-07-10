@@ -16,7 +16,7 @@ export const fetchRepos = async () => {
     return null;
   }
 };
-export const fetchUserAddressFromBio = async username => {
+export const fetchUserAddressFromBio = async (username: string) => {
   try {
     const response = await fetch(`${API_URL}/get_addr_for_user_bio?username=${username}`);
     if (!response.ok) {
@@ -30,7 +30,7 @@ export const fetchUserAddressFromBio = async username => {
   }
 };
 
-export const fetchRepoAddress = async (owner, repo) => {
+export const fetchRepoAddress = async (owner: string, repo: string) => {
   try {
     const response = await fetch(`${API_URL}/get_addr_of_repo?owner=${owner}&repo=${repo}`);
     if (!response.ok) {
@@ -44,7 +44,7 @@ export const fetchRepoAddress = async (owner, repo) => {
   }
 };
 
-export const fetchDistributionOfRepo = async (owner, repo) => {
+export const fetchDistributionOfRepo = async (owner: string, repo: string) => {
   try {
     const response = await fetch(`${API_URL}/get_distribution_of_repo?owner=${owner}&repo=${repo}`);
     if (!response.ok) {

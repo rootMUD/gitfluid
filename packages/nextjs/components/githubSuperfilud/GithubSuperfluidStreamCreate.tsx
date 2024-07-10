@@ -5,11 +5,14 @@ import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaf
 
 export const GithubSuperfluidStreamCreate = forwardRef(
   (
-    { receiver, flowRateRatio, totalFlowRate }: { receiver: string; flowRateRatio: number; totalFlowRate: string },
+    {
+      receiver,
+      flowRateRatio,
+      totalFlowRate,
+    }: { receiver: `0x${string}`; flowRateRatio: number; totalFlowRate: string },
     ref: any,
   ) => {
     const [flowRate, setFlowRate] = useState(0n);
-    const NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT = "0xaf921d3d5a903f8b658aeaebed7a30b3dbb5b7bc";
     useEffect(() => {
       if (totalFlowRate && !isNaN(parseFloat(totalFlowRate)) && flowRateRatio) {
         const flowRateNumber = parseFloat(totalFlowRate) * flowRateRatio;
@@ -28,7 +31,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
     } = useScaffoldReadContract({
       contractName: "CFAv1Forwarder",
       functionName: "getFlowrate",
-      args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, receiver],
+      args: [process.env.NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT as `0x${string}`, senderAddress, receiver],
     });
     const { writeContractAsync: createStreamWriteAsync, isPending: isCreateFlowLoading } =
       useScaffoldWriteContract("CFAv1Forwarder");
@@ -40,7 +43,13 @@ export const GithubSuperfluidStreamCreate = forwardRef(
         createStreamWriteAsync(
           {
             functionName: "createFlow",
-            args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, receiver, flowRate, "0x0"],
+            args: [
+              process.env.NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT as `0x${string}`,
+              senderAddress,
+              receiver,
+              flowRate,
+              "0x0",
+            ],
           },
           {
             onBlockConfirmation: txnReceipt => {
@@ -56,7 +65,7 @@ export const GithubSuperfluidStreamCreate = forwardRef(
       removeStreamWriteAsync(
         {
           functionName: "deleteFlow",
-          args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, receiver, "0x0"],
+          args: [process.env.NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT as `0x${string}`, senderAddress, receiver, "0x0"],
         },
         {
           onBlockConfirmation: txnReceipt => {

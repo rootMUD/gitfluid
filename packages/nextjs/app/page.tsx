@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import type { NextPage } from "next";
 import { fetchDistributionOfRepo, fetchRepoAddress, fetchRepos } from "~~/components/GithubFetcher";
-import { GithubShow } from "~~/components/githubSuperfilud/GithubShow";
+import { GithubShow, Repo } from "~~/components/githubSuperfilud/GithubShow";
 
 const Home: NextPage = () => {
-  const [repositories, setRepositories] = useState([]);
+  const [repositories, setRepositories] = useState<Repo[]>([]);
   const [loading, setLoading] = useState(false);
   const [repoLink, setRepoLink] = useState("https://github.com/rootMUD/gitfluid/");
 

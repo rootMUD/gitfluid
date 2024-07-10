@@ -1,9 +1,9 @@
-import { useState } from "react";
+// import { useState } from "react";
 import { RainbowKitCustomConnectButton } from "../scaffold-eth";
 import { Repo } from "./GithubShow";
 import { GithubSuperfluidPool } from "./GithubSuperfliudPool";
-import { GithubSuperfluidStream } from "./GithubSuperfluidStream";
-import { clsx } from "clsx";
+// import { GithubSuperfluidStream } from "./GithubSuperfluidStream";
+// import { clsx } from "clsx";
 import { useAccount } from "wagmi";
 
 // enum DISTRIBUTION_MODE {
@@ -17,7 +17,7 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
   console.log(`Creating superfluid stream for address: ${repo.ethAddress}`);
   console.log(`Creating superfluid stream based on rules: ${JSON.stringify(repo.distributionRulesJSON)}`);
   const getFlowRateRatioMap = (repo: Repo) => {
-    const flowRateRatioMap = new Map<string, { receiverAddress: string; flowRateRatio: number }>();
+    const flowRateRatioMap = new Map<string, { receiverAddress: `0x${string}`; flowRateRatio: number }>();
     repo.distributionRulesJSON.contributors.forEach(contributor => {
       if (flowRateRatioMap.has(contributor.addr)) {
         const flowRate = flowRateRatioMap.get(contributor.addr);
@@ -75,7 +75,13 @@ export const GithubSuperfluid = ({ repo }: { repo: Repo }) => {
       {/* {connectedWallet && distrbutionMode === DISTRIBUTION_MODE.STREAM_MODE && (
         <GithubSuperfluidStream repoAddress={repo.ethAddress} flowRateRatioMap={flowRateRatioMap} />
       )} */}
-      {connectedWallet && <GithubSuperfluidPool poolAddress={repo.poolAddress} repoAddress={repo.ethAddress} flowRateRatioMap={flowRateRatioMap} />}
+      {connectedWallet && (
+        <GithubSuperfluidPool
+          poolAddress={repo.poolAddress}
+          repoAddress={repo.ethAddress}
+          flowRateRatioMap={flowRateRatioMap}
+        />
+      )}
     </>
   );
 };

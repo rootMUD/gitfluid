@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/co
 
 // Props type definition (optional but recommended for TypeScript)
 interface RepoDetail {
-  addr: string;
+  addr: `0x${string}`;
   distribution_rate: number;
   name: string;
   url: string;
 }
 
 interface ContributorDetail {
-  addr: string;
+  addr: `0x${string}`;
   distribution_rate: number;
   name: string;
   url: string;
@@ -28,8 +28,8 @@ export interface DistributionRulesJSON {
 export interface Repo {
   title: string;
   description: string;
-  poolAddress: string;
-  ethAddress: string;
+  poolAddress: `0x${string}`;
+  ethAddress: `0x${string}`;
   distributionRulesJSON: DistributionRulesJSON;
   distributionRulesMD: string;
 }

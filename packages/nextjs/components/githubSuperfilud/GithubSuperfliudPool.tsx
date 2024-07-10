@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { GithubSuperfluidPoolMemberUnitUpdate } from "./GithubSuperfliudPoolMemberUpdate";
+import { gql, useQuery } from "@apollo/client";
 import "github-markdown-css";
 import { useTheme } from "next-themes";
 import { parseEther } from "viem";
@@ -17,13 +18,13 @@ export const GithubSuperfluidPool = ({
 }: {
   poolAddress: string;
   repoAddress: string;
-  flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
+  flowRateRatioMap: Map<string, { receiverAddress: `0x${string}`; flowRateRatio: number }>;
 }) => {
   // TODO: make this dynamic from .env
   const NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT = "0xfA91DF95b094C7461A625067A4d7af98591AE60c";
   console.log("poolAddr", poolAddress);
   // DONE: updated the POOL_ADDRESS with get dynamically from the README.md
-  const POOL_ADDRESS = poolAddress;
+  const POOL_ADDRESS = poolAddress as `0x${string}`;
   /** moke pool for test */
   // const POOL_ADDRESS = "0xCF0Eaf51b5F7bA7cC2BF672dc05EBb6B4579d536";
   const { theme } = useTheme();
@@ -63,6 +64,21 @@ export const GithubSuperfluidPool = ({
   });
 
   const modalRef = useRef<HTMLDialogElement>(null);
+  const GET_POOL_TOKEN = gql`
+    query MyQuery {
+      pool(id: "${poolAddress.toLocaleLowerCase()}") {
+        token {
+          name
+        }
+      }
+    }
+  `;
+
+  const {
+    // loading: getCreatePoolInfoLoading,
+    data: createdPoolsInfo,
+  }: { loading: boolean; data: { pool: { token: { name: string } } } | undefined } = useQuery(GET_POOL_TOKEN);
+  console.log("get createdPoolsInfo", createdPoolsInfo, GET_POOL_TOKEN.loc?.source.body);
 
   const createPool = () => {
     if (!senderAddress || senderAddress !== repoAddress) {
@@ -89,6 +105,7 @@ export const GithubSuperfluidPool = ({
         onBlockConfirmation: txnReceipt => {
           console.log("📦 Transaction blockHash", txnReceipt.blockHash);
           const createdPoolAddressData = txnReceipt.logs.find(
+            //create pool event keccak256 hash:0x9c5d829b9b23efc461f9aeef91979ec04bb903feb3bee4f26d22114abfc7335b
             log => log.topics[0] === "0x9c5d829b9b23efc461f9aeef91979ec04bb903feb3bee4f26d22114abfc7335b",
           )?.data;
           if (createdPoolAddressData) {
@@ -235,7 +252,8 @@ export const GithubSuperfluidPool = ({
               <span className="block text-center ">
                 {!distributionFlowRateReadData && distributionFlowRateReadData !== 0n && "UNKNOW"}
                 {distributionFlowRateReadData ||
-                  (distributionFlowRateReadData == 0n && distributionFlowRateReadData.toString() + "wei LeeDuckGoX/s")}
+                  (distributionFlowRateReadData == 0n &&
+                    distributionFlowRateReadData.toString() + `wei ${createdPoolsInfo?.pool?.token?.name}/s`)}
               </span>
             )}
           </p>
@@ -252,7 +270,9 @@ export const GithubSuperfluidPool = ({
 
               <p className="m-0">
                 <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
-                <span className="block text-center">{distributeFlowRate.toString() + "wei LeeDuckGoX/s"}</span>
+                <span className="block text-center">
+                  {distributeFlowRate.toString() + `wei ${createdPoolsInfo?.pool?.token?.name}/s`}
+                </span>
               </p>
 
               <div className="flex items-center justify-center">
@@ -264,7 +284,7 @@ export const GithubSuperfluidPool = ({
                     placeholder="Type Flow Rate"
                     className="dark:!bg-[#385183] grow w-[6rem]"
                   />
-                  LeeDuckGoX/Day
+                  {`${createdPoolsInfo?.pool?.token?.name}/Day`}
                 </label>
                 <button
                   disabled={isDistributePoolLoading}
@@ -288,7 +308,9 @@ export const GithubSuperfluidPool = ({
               />
               <p className="m-0">
                 <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
-                <span className="block text-center">{distributeAmount.toString() + "wei LeeDuckGoX"}</span>
+                <span className="block text-center">
+                  {distributeAmount.toString() + `wei ${createdPoolsInfo?.pool?.token?.name}`}
+                </span>
               </p>
               <div className="flex items-center justify-center">
                 <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
@@ -299,7 +321,7 @@ export const GithubSuperfluidPool = ({
                     placeholder="Type Amount"
                     className="dark:!bg-[#385183] grow w-[6rem]"
                   />
-                  LeeDuckGoX
+                  {createdPoolsInfo?.pool?.token?.name}
                 </label>
                 <button
                   disabled={isDistributeAmountPoolLoading}
