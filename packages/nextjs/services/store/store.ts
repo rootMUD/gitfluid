@@ -1,4 +1,6 @@
-import { create } from "zustand";
+import { StateCreator, create } from "zustand";
+import { persist } from "zustand/middleware";
+import { Repo } from "~~/components/githubSuperfilud/GithubShow";
 import scaffoldConfig from "~~/scaffold.config";
 import { ChainWithAttributes } from "~~/utils/scaffold-eth";
 
@@ -34,3 +36,32 @@ export const useGlobalState = create<GlobalState>(set => ({
   targetNetwork: scaffoldConfig.targetNetworks[0],
   setTargetNetwork: (newTargetNetwork: ChainWithAttributes) => set(() => ({ targetNetwork: newTargetNetwork })),
 }));
+type RepoWithDetails = Repo[];
+interface ReposWithDetailsState {
+  reposWithDetails: RepoWithDetails;
+  addReposWithDetails: (repo: Repo) => void;
+  removeReposWithDetails: (index: number) => void;
+  removeAllRepos: () => void;
+}
+
+const reposWithDetailsStore: StateCreator<ReposWithDetailsState, [["zustand/persist", unknown]]> = set => ({
+  reposWithDetails: [],
+  addReposWithDetails: (repo: Repo) => {
+    set(state => ({
+      reposWithDetails: [...state.reposWithDetails, repo],
+    }));
+  },
+  removeReposWithDetails: (index: number) => {
+    set(state => ({
+      reposWithDetails: state.reposWithDetails.filter((_, i) => i !== index),
+    }));
+  },
+  removeAllRepos: () => {
+    set(() => ({
+      reposWithDetails: [],
+    }));
+  },
+});
+export const useReposWithDetailsStore = create<ReposWithDetailsState>(
+  persist(reposWithDetailsStore, { name: "reposWithDetails" }) as any,
+);
