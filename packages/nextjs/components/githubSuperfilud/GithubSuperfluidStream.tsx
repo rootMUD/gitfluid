@@ -11,10 +11,9 @@ export const GithubSuperfluidStream = ({
   repoAddress,
   flowRateRatioMap,
 }: {
-  repoAddress: string;
-  flowRateRatioMap: Map<string, { receiverAddress: string; flowRateRatio: number }>;
+  repoAddress: `0x${string}`;
+  flowRateRatioMap: Map<string, { receiverAddress: `0x${string}`; flowRateRatio: number }>;
 }) => {
-  const NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT = "0xAf921d3D5A903F8b658aeAEbeD7a30B3Dbb5B7Bc";
   const { theme } = useTheme();
   const [totalFlowRate, setTotalFlowRate] = useState("");
   const [donateFlowRateInput, setDonateFlowRateInput] = useState("");
@@ -40,7 +39,7 @@ export const GithubSuperfluidStream = ({
   } = useScaffoldReadContract({
     contractName: "CFAv1Forwarder",
     functionName: "getFlowrate",
-    args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, repoAddress],
+    args: [process.env.NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT as `0x${string}`, senderAddress, repoAddress],
   });
   console.log(`flowRateReadData: ${flowRateReadData}`);
   useEffect(() => {
@@ -75,7 +74,13 @@ export const GithubSuperfluidStream = ({
       CreateFlowWriteAsync(
         {
           functionName: "createFlow",
-          args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, repoAddress, donateFlowRate, "0x0"],
+          args: [
+            process.env.NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT as `0x${string}`,
+            senderAddress,
+            repoAddress,
+            donateFlowRate,
+            "0x0",
+          ],
         },
         {
           onBlockConfirmation: txnReceipt => {
@@ -93,7 +98,7 @@ export const GithubSuperfluidStream = ({
     removeStreamWriteAsync(
       {
         functionName: "deleteFlow",
-        args: [NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT, senderAddress, repoAddress, "0x0"],
+        args: [process.env.NEXT_PUBLIC_LEEDUCKGOX_TOKEN_CONTRACT as `0x${string}`, senderAddress, repoAddress, "0x0"],
       },
       {
         onBlockConfirmation: txnReceipt => {

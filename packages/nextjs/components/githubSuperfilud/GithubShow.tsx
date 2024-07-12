@@ -8,14 +8,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~~/co
 
 // Props type definition (optional but recommended for TypeScript)
 interface RepoDetail {
-  addr: string;
+  addr: `0x${string}`;
   distribution_rate: number;
   name: string;
   url: string;
 }
 
 interface ContributorDetail {
-  addr: string;
+  addr: `0x${string}`;
   distribution_rate: number;
   name: string;
   url: string;
@@ -26,28 +26,36 @@ export interface DistributionRulesJSON {
 }
 
 export interface Repo {
+  owner: string;
+  name: string;
   title: string;
   description: string;
-  poolAddress: string;
-  ethAddress: string;
+  poolAddress: `0x${string}`;
+  ethAddress: `0x${string}`;
   distributionRulesJSON: DistributionRulesJSON;
   distributionRulesMD: string;
 }
 
 interface GithubShowProps {
   repositories: Repo[];
+  removeRepoHandle: (index: number) => void;
 }
 
-export function GithubShow({ repositories }: GithubShowProps) {
+export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) {
   const { theme } = useTheme();
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 md:p-8 lg:p-10">
       {repositories.map((repo, index) => (
         <Card
           key={index}
-          className="h-[36rem] overflow-y-auto overflow-x-hidden"
+          className="h-[36rem] overflow-y-auto overflow-x-hidden relative"
           style={theme === "dark" ? { scrollbarColor: "#385183 black" } : { scrollbarColor: "#93BBFB white" }}
         >
+          <div className="sticky h-10 flex justify-end items-center w-full top-0">
+            <button className="btn btn-primary btn-xs" onClick={() => removeRepoHandle(index)}>
+              Remove Repo
+            </button>
+          </div>
           <CardHeader className="flex items-start justify-between">
             <div className="space-y-1">
               <CardTitle className="text-center uppercase">{repo.title}</CardTitle>
