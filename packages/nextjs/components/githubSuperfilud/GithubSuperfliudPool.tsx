@@ -25,7 +25,7 @@ export const GithubSuperfluidPool = ({
   console.log("poolAddr", poolAddress);
   // DONE: updated the POOL_ADDRESS with get dynamically from the README.md
   const POOL_ADDRESS = poolAddress as `0x${string}`;
-  /** moke pool for test */
+  /** mock pool for test */
   // const POOL_ADDRESS = "0xCF0Eaf51b5F7bA7cC2BF672dc05EBb6B4579d536";
   const { theme } = useTheme();
   const { address: senderAddress } = useAccount();
@@ -33,6 +33,7 @@ export const GithubSuperfluidPool = ({
   const [distributeFlowRate, setDistributeFlowRate] = useState(0n);
   const [distributeAmountInput, setDistributeAmountInput] = useState<string>("");
   const [distributeAmount, setDistributeAmount] = useState(0n);
+  const [donationMethod, setDonationMethod] = useState("direct"); // Add state for donation method
   const {
     refetch: distributionFlowRateRefrech,
     isFetching: readDistributionFlowRateLoading,
@@ -75,7 +76,6 @@ export const GithubSuperfluidPool = ({
   `;
 
   const {
-    // loading: getCreatePoolInfoLoading,
     data: createdPoolsInfo,
   }: { loading: boolean; data: { pool: { token: { name: string } } } | undefined } = useQuery(GET_POOL_TOKEN);
   console.log("get createdPoolsInfo", createdPoolsInfo, GET_POOL_TOKEN.loc?.source.body);
@@ -176,6 +176,7 @@ export const GithubSuperfluidPool = ({
       notification.error("Please set right donate flow rate.");
     }
   };
+
   const distributeAmountToPool = () => {
     if (distributeAmount > 0n) {
       distributeAmountWriteAsync(
@@ -250,10 +251,11 @@ export const GithubSuperfluidPool = ({
               </span>
             ) : (
               <span className="block text-center ">
-                {!distributionFlowRateReadData && distributionFlowRateReadData !== 0n && "UNKNOW"}
-                {distributionFlowRateReadData ||
-                  (distributionFlowRateReadData == 0n &&
-                    distributionFlowRateReadData.toString() + `wei ${createdPoolsInfo?.pool?.token?.name}/s`)}
+                {distributionFlowRateReadData === undefined ? (
+                  "UNKNOWN"
+                ) : (
+                  distributionFlowRateReadData.toString() + ` wei ${createdPoolsInfo?.pool?.token?.name}/s`
+                )}
               </span>
             )}
           </p>
@@ -261,84 +263,102 @@ export const GithubSuperfluidPool = ({
         {senderAddress && (
           <>
             {/* distribute flow*/}
-            <hr></hr>
+            <hr />
             <h2>
-              <center>For Donator</center>
+              <center><b>For Donator</b></center>
             </h2>
             <div className="space-y-2">
-              <div className="badge badge-primary">Donate by Stream Way</div>
-
-              <p className="m-0">
-                <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
-                <span className="block text-center">
-                  {distributeFlowRate.toString() + `wei ${createdPoolsInfo?.pool?.token?.name}/s`}
-                </span>
-              </p>
-
-              <div className="flex items-center justify-center">
-                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
+              <div className="flex justify-center items-center space-x-4">
+                <label className="flex items-center space-x-2">
                   <input
-                    value={distributeFlowRateInput}
-                    onChange={e => setDistributeFlowRateInput(e.target.value)}
-                    type="text"
-                    placeholder="Type Flow Rate"
-                    className="dark:!bg-[#385183] grow w-[6rem]"
+                    type="radio"
+                    value="direct"
+                    checked={donationMethod === "direct"}
+                    onChange={() => setDonationMethod("direct")}
                   />
-                  {`${createdPoolsInfo?.pool?.token?.name}/Day`}
+                  <span>Donate Directly</span>
                 </label>
-                <button
-                  disabled={isDistributePoolLoading}
-                  onClick={distributeFlow}
-                  className="btn btn-success btn-outline ml-2"
-                >
-                  Donate
-                </button>
-              </div>
-            </div>
-
-            {/* distribute amount*/}
-            <div className="space-y-2">
-              <div className="badge badge-primary">Donate Directly</div>
-              <Image
-                src="/assets/superfluid_distribution_instance.gif"
-                alt="Superfluid Distribution Instance"
-                width={500} // Adjust the width as needed
-                height={300} // Adjust the height as needed
-                layout="responsive" // This makes the image scale nicely to the parent element
-              />
-              <p className="m-0">
-                <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
-                <span className="block text-center">
-                  {distributeAmount.toString() + `wei ${createdPoolsInfo?.pool?.token?.name}`}
-                </span>
-              </p>
-              <div className="flex items-center justify-center">
-                <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto  w-full">
+                <label className="flex items-center space-x-2">
                   <input
-                    value={distributeAmountInput}
-                    onChange={e => setDistributeAmountInput(e.target.value)}
-                    type="text"
-                    placeholder="Type Amount"
-                    className="dark:!bg-[#385183] grow w-[6rem]"
+                    type="radio"
+                    value="stream"
+                    checked={donationMethod === "stream"}
+                    onChange={() => setDonationMethod("stream")}
                   />
-                  {createdPoolsInfo?.pool?.token?.name}
+                  <span>Donate by Stream Way</span>
                 </label>
-                <button
-                  disabled={isDistributeAmountPoolLoading}
-                  onClick={distributeAmountToPool}
-                  className="btn btn-success btn-outline ml-2"
-                >
-                  Donate
-                </button>
               </div>
+              {donationMethod === "direct" ? (
+                <>
+                  <Image
+                    src="/assets/superfluid_distribution_instance.gif"
+                    alt="Superfluid Distribution Instance"
+                    width={500} // Adjust the width as needed
+                    height={300} // Adjust the height as needed
+                    layout="responsive" // This makes the image scale nicely to the parent element
+                  />
+                  <p className="m-0">
+                    <span className="text-blue-500">Amount Distribute Typed Calculated:</span>
+                    <span className="block text-center">
+                      {distributeAmount.toString() + ` wei ${createdPoolsInfo?.pool?.token?.name}`}
+                    </span>
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-full">
+                      <input
+                        value={distributeAmountInput}
+                        onChange={e => setDistributeAmountInput(e.target.value)}
+                        type="text"
+                        placeholder="Type Amount"
+                        className="dark:!bg-[#385183] grow w-[6rem]"
+                      />
+                      {createdPoolsInfo?.pool?.token?.name}
+                    </label>
+                    <button
+                      disabled={isDistributeAmountPoolLoading}
+                      onClick={distributeAmountToPool}
+                      className="btn btn-success btn-outline ml-2"
+                    >
+                      Donate
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p className="m-0">
+                    <span className="text-blue-500">Flow Rate Distribute Typed Calculated:</span>
+                    <span className="block text-center">
+                      {distributeFlowRate.toString() + ` wei ${createdPoolsInfo?.pool?.token?.name}/s`}
+                    </span>
+                  </p>
+                  <div className="flex items-center justify-center">
+                    <label className="input dark:!bg-[#385183] input-bordered flex items-center gap-2 input-md mx-auto w-full">
+                      <input
+                        value={distributeFlowRateInput}
+                        onChange={e => setDistributeFlowRateInput(e.target.value)}
+                        type="text"
+                        placeholder="Type Flow Rate"
+                        className="dark:!bg-[#385183] grow w-[6rem]"
+                      />
+                      {`${createdPoolsInfo?.pool?.token?.name}/Day`}
+                    </label>
+                    <button
+                      disabled={isDistributePoolLoading}
+                      onClick={distributeFlow}
+                      className="btn btn-success btn-outline ml-2"
+                    >
+                      Donate
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
-            <hr></hr>
+            <hr />
             <h2>
-              <center>For Receiver</center>
+              <center><b>For Receiver</b></center>
             </h2>
             <div className="space-y-2">
               <div className="badge badge-primary">Connect/Disconnect Pool to receive donation</div>
-
               {[...flowRateRatioMap.keys()].includes(senderAddress) ? (
                 <div className="flex justify-start items-center">
                   <span className="text-blue-500">Current account connected:</span>
@@ -375,11 +395,11 @@ export const GithubSuperfluidPool = ({
                 </>
               )}
             </div>
-            <hr></hr>
+            <hr />
             <h2>
-              <center>For Admin</center>
+              <center><b>For Admin</b></center>
             </h2>
-            {/*set member unit */}
+            {/* set member unit */}
             <div className="space-y-2">
               <div className="badge badge-primary">Set Member Unit/Only Repo Owner</div>
               <button className="w-full flex mx-auto btn btn-secondary" onClick={openUpdateMemberUnitsModel}>
