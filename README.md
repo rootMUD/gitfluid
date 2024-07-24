@@ -102,8 +102,8 @@ Run smart contract test with `yarn hardhat:test`
 
     💡Fork from
     
-  * [bodhi-img](https://github.com/rootMUD/bodhi-img) - 50%
+  * [bodhi-bbs](https://github.com/rootMUD/bodhi-bbs) - 50%
  
-    💡Fork from
+    💡Code Ref
 
 
