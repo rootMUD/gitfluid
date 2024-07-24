@@ -92,7 +92,11 @@ Run smart contract test with `yarn hardhat:test`
 
 * Contributors - 70%
 
-  * [leeduckgo ](https://github.com/leeduckgo) - 100%
+  * [leeduckgo](https://github.com/leeduckgo) - 40%
+
+    💡Core Contributor
+
+  * [fun](https://github.com/yangfan3211) - 60%
 
     💡Core Contributor
 
