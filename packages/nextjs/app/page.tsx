@@ -29,7 +29,7 @@ const Home: NextPage = () => {
           return;
         }
         // Fetch additional details for each repository
-        const repoInfo = await fetchRepoInfo(owner, name);
+        const repoInfo = await fetchRepoInfo(owner, name, repoUrl); // Pass repoUrl here
         addRepo(repoInfo);
       } else {
         console.error(`No data url:${repoUrl}`);
@@ -40,7 +40,8 @@ const Home: NextPage = () => {
     }
     setLoading(false);
   };
-  const fetchRepoInfo = async (repoOwner: string, repoName: string) => {
+
+  const fetchRepoInfo = async (repoOwner: string, repoName: string, repoUrl: string) => {
     const repoInfo = await fetchRepoAddress(repoOwner, repoName);
     const distributionRules = await fetchDistributionOfRepo(repoOwner, repoName);
     console.log(repoInfo);
@@ -55,6 +56,7 @@ const Home: NextPage = () => {
         distributionRulesJSON: distributionRules.distribution_rules_json,
         distributionRulesMD: distributionRules.distribution_rules_md,
         poolAddress: distributionRules.pool_addr,
+        url: repoUrl, // Add the repo URL here
       };
     } else {
       throw new Error("Failed to fetch data");
@@ -104,7 +106,9 @@ const Home: NextPage = () => {
       </div>
       <ApolloProvider client={client}>
         {repositories.length > 0 ? (
-          <GithubShow removeRepoHandle={removeRepo} repositories={repositories} />
+          <center>
+            <GithubShow removeRepoHandle={removeRepo} repositories={repositories} />
+          </center>
         ) : (
           <div className="mx-auto">
             <div role="alert" className="alert">

@@ -29,6 +29,7 @@ export interface Repo {
   owner: string;
   name: string;
   title: string;
+  url: string;
   description: string;
   poolAddress: `0x${string}`;
   ethAddress: `0x${string}`;
@@ -42,9 +43,14 @@ interface GithubShowProps {
 }
 
 export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) {
+  console.log("repositories: ", repositories);
   const { theme } = useTheme();
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 md:p-8 lg:p-10">
+    <section
+      className={`grid gap-6 p-6 md:p-8 lg:p-10 ${
+        repositories.length === 1 ? "place-items-center" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      }`}
+    >
       {repositories.map((repo, index) => (
         <Card
           key={index}
@@ -61,7 +67,11 @@ export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) 
               <CardTitle className="text-center uppercase">{repo.title}</CardTitle>
               <CardDescription className="break-all">{repo.description}</CardDescription>
             </div>
-            <Link className="text-gray-900 self-center hover:underline dark:text-gray-50" href="#">
+            <Link
+              className="text-gray-900 self-center hover:underline dark:text-gray-50"
+              href={repo.url}
+              target="_blank"
+            >
               View
             </Link>
           </CardHeader>

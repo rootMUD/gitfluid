@@ -1,7 +1,7 @@
 "use client";
 
-import { SearchBar } from "./_components";
 import { useEffect, useState } from "react";
+import { SearchBar } from "./_components";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import type { NextPage } from "next";
 import { fetchDistributionOfRepo, fetchRepoAddress, fetchRepos } from "~~/components/GithubFetcher";
@@ -11,6 +11,7 @@ const BlockExplorer: NextPage = () => {
   const [repositories, setRepositories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [repoLink, setRepoLink] = useState("https://github.com/rootMUD/gitfluid/");
+  const [viewMode, setViewMode] = useState("gallery"); // State for view mode
 
   const loadRepositories = async (repoLink = "") => {
     setLoading(true);
@@ -29,10 +30,11 @@ const BlockExplorer: NextPage = () => {
             // Fetch additional details for each repository
             const repoAddress = await fetchRepoAddress(repo.owner, repo.name);
             const distributionRules = await fetchDistributionOfRepo(repo.owner, repo.name);
-            console.log(repoAddress);
             console.log(distributionRules);
+
             return {
               title: repo.name,
+              url: `https://github.com/${repo.owner}/${repo.name}`,
               description: repoAddress.bio,
               ethAddress: repoAddress.eth_addr,
               distributionRulesJSON: distributionRules.distribution_rules_json,
@@ -69,16 +71,29 @@ const BlockExplorer: NextPage = () => {
     cache: new InMemoryCache(),
   });
 
+  const handleToggleChange = () => {
+    setViewMode(viewMode === "gallery" ? "map" : "gallery");
+  };
+
   return (
     <>
       <br />
-      <h1 style={{ fontSize: '1.5em' }}>
+      <h1 style={{ fontSize: "1.5em" }}>
         <center>
           🚀 See All the projects that <b>has defined the distribution rules yet🚀 </b>
         </center>
       </h1>
       <br />
-      <SearchBar />
+      <div className="flex justify-center items-center space-x-4">
+        <div className="flex items-center space-x-2">
+          <label className="switch">
+            <input type="checkbox" checked={viewMode === "map"} onChange={handleToggleChange} />
+            <span className="slider round"></span>
+          </label>
+          <span>{viewMode === "gallery" ? "Gallery View" : "Map View"}</span>
+        </div>
+        <SearchBar className="w-96" />
+      </div>
       <br />
       {loading ? (
         <div className="flex justify-center items-center">
@@ -86,7 +101,14 @@ const BlockExplorer: NextPage = () => {
         </div>
       ) : (
         <ApolloProvider client={client}>
-          <GithubShow repositories={repositories} />
+          {viewMode === "gallery" ? (
+            <GithubShow repositories={repositories} />
+          ) : (
+            <div>
+              {/* Replace with the related map component */}
+              <p>Map View (Related Map)</p>
+            </div>
+          )}
         </ApolloProvider>
       )}
     </>
@@ -94,4 +116,3 @@ const BlockExplorer: NextPage = () => {
 };
 
 export default BlockExplorer;
-
