@@ -69,7 +69,8 @@ export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) 
             </div>
             <Link
               className="text-gray-900 self-center hover:underline dark:text-gray-50"
-              href={repo.url}
+              href="https://github.com/rootmud/gitfluid"
+              // TODO: update to dynamic.
               target="_blank"
             >
               View

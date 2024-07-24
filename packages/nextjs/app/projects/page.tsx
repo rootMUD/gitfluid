@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { SearchBar } from "./_components";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import type { NextPage } from "next";
@@ -106,7 +107,13 @@ const BlockExplorer: NextPage = () => {
           ) : (
             <div>
               {/* Replace with the related map component */}
-              <p>Map View (Related Map)</p>
+              <Image
+                src="/assets/map_mock.svg"
+                alt="Map Mock SVG"
+                width={600} // Adjust the width as needed
+                height={400} // Adjust the height as needed
+                layout="responsive" // This makes the image scale nicely to the parent element
+              />
             </div>
           )}
         </ApolloProvider>

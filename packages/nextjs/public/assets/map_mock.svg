@@ -1,0 +1,57 @@
+<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <style>
+    .repo { fill: lightblue; stroke: blue; stroke-width: 2px; }
+    .contributor { fill: lightgreen; stroke: green; stroke-width: 2px; }
+    .text { font-family: Arial, sans-serif; font-size: 12px; }
+    .link { stroke: gray; stroke-width: 2px; }
+  </style>
+
+  <!-- Main Repo -->
+  <circle cx="300" cy="200" r="20" class="repo" />
+  <text x="300" y="200" text-anchor="middle" dy=".3em" class="text">gitfluid</text>
+  <a xlink:href="https://github.com/rootMUD/gitfluid/" target="_blank">
+    <text x="300" y="200" text-anchor="middle" dy=".3em" class="text" style="text-decoration: underline;">gitfluid</text>
+  </a>
+
+  <!-- Contributors -->
+  <circle cx="200" cy="100" r="20" class="contributor" />
+ 
+  <a xlink:href="https://github.com/leeduckgo" target="_blank">
+    <text x="200" y="100" text-anchor="middle" dy=".3em" class="text" style="text-decoration: underline;">leeduckgo</text> 
+  </a>
+  <text x="200" y="120" text-anchor="middle" dy=".3em" class="text" >Core Contributor</text>
+
+  <circle cx="400" cy="100" r="20" class="contributor" />
+  
+  <a xlink:href="https://github.com/yangfan3211" target="_blank">
+    <text x="400" y="100" text-anchor="middle" dy=".3em" class="text" style="text-decoration: underline;">fun</text>
+  </a>
+  <text x="400" y="120" text-anchor="middle" dy=".3em" class="text" >Core Contributor</text>
+
+  <!-- Related Repos -->
+  <circle cx="100" cy="300" r="20" class="repo" />
+  
+  <a xlink:href="https://github.com/rootMUD/bodhi-img" target="_blank">
+    <text x="100" y="300" text-anchor="middle" dy=".3em" class="text" style="text-decoration: underline;">bodhi-img</text>
+  </a>
+  <text x="100" y="320" text-anchor="middle" dy=".3em" class="text" >Fork from</text>
+
+  <circle cx="500" cy="300" r="20" class="repo" />
+  
+  <a xlink:href="https://github.com/rootMUD/bodhi-bbs" target="_blank">
+    <text x="500" y="300" text-anchor="middle" dy=".3em" class="text" style="text-decoration: underline;">bodhi-bbs</text>
+  </a>
+  <text x="500" y="320" text-anchor="middle" dy=".3em" class="text" >Code Ref</text>
+
+  <!-- Links -->
+  <line x1="300" y1="180" x2="200" y2="120" class="link" />
+  <line x1="300" y1="180" x2="400" y2="120" class="link" />
+  <line x1="300" y1="220" x2="100" y2="280" class="link" />
+  <line x1="300" y1="220" x2="500" y2="280" class="link" />
+
+  <!-- Distribution Text -->
+  <text x="250" y="150" text-anchor="middle" dy=".3em" class="text">70% * 40%</text>
+  <text x="350" y="150" text-anchor="middle" dy=".3em" class="text">70% * 60%</text>
+  <text x="200" y="250" text-anchor="middle" dy=".3em" class="text">30% * 50%</text>
+  <text x="400" y="250" text-anchor="middle" dy=".3em" class="text">30% * 50%</text>
+</svg>
