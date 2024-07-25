@@ -40,9 +40,10 @@ export interface Repo {
 interface GithubShowProps {
   repositories: Repo[];
   removeRepoHandle: (index: number) => void;
+  canRemove?: boolean;
 }
 
-export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) {
+export function GithubShow({ repositories, removeRepoHandle, canRemove = true }: GithubShowProps) {
   console.log("repositories: ", repositories);
   const { theme } = useTheme();
   return (
@@ -58,9 +59,11 @@ export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) 
           style={theme === "dark" ? { scrollbarColor: "#385183 black" } : { scrollbarColor: "#93BBFB white" }}
         >
           <div className="sticky h-10 flex justify-end items-center w-full top-0">
-            <button className="btn btn-primary btn-xs" onClick={() => removeRepoHandle(index)}>
-              Remove Repo
-            </button>
+            {canRemove && (
+              <button className="btn btn-primary btn-xs" onClick={() => removeRepoHandle(index)}>
+                Remove Repo
+              </button>
+            )}
           </div>
           <CardHeader className="flex items-start justify-between">
             <div className="space-y-1">
@@ -69,7 +72,7 @@ export function GithubShow({ repositories, removeRepoHandle }: GithubShowProps) 
             </div>
             <Link
               className="text-gray-900 self-center hover:underline dark:text-gray-50"
-              href="https://github.com/rootmud/gitfluid"
+              href={repo.url}
               // TODO: update to dynamic.
               target="_blank"
             >
