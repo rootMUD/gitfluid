@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { SearchBar } from "./_components";
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 import type { NextPage } from "next";
 import { fetchDistributionOfRepo, fetchRepoAddress, fetchRepos } from "~~/components/GithubFetcher";
 import { GithubShow } from "~~/components/githubSuperfilud/GithubShow";
 
 const BlockExplorer: NextPage = () => {
-  const [repositories, setRepositories] = useState([]);
+  const [repositories, setRepositories] = useState<Array<any>>([]);
   const [loading, setLoading] = useState(false);
-  const [repoLink, setRepoLink] = useState("https://github.com/rootMUD/gitfluid/");
+  const [repoLink, setRepoLink] = useState("");
   const [viewMode, setViewMode] = useState("gallery"); // State for view mode
 
   const loadRepositories = async (repoLink = "") => {
@@ -19,14 +17,14 @@ const BlockExplorer: NextPage = () => {
     try {
       let repos = [];
       if (repoLink) {
-        const [owner, name] = repoLink.split("/").slice(-2);
+        const [owner, name] = new URL(repoLink).pathname.split("/").slice(1, 3);
         repos = [{ owner, name }];
       } else {
-        repos = await fetchRepos();
+        repos = (await fetchRepos()) as Array<any>;
       }
 
       if (repos && repos.length > 0) {
-        const repoDetails = await Promise.all(
+        const repoDetails: Array<any> = await Promise.all(
           repos.map(async (repo: { owner: any; name: any }) => {
             // Fetch additional details for each repository
             const repoAddress = await fetchRepoAddress(repo.owner, repo.name);
@@ -36,11 +34,11 @@ const BlockExplorer: NextPage = () => {
             return {
               title: repo.name,
               url: `https://github.com/${repo.owner}/${repo.name}`,
-              description: repoAddress.bio,
-              ethAddress: repoAddress.eth_addr,
-              distributionRulesJSON: distributionRules.distribution_rules_json,
-              distributionRulesMD: distributionRules.distribution_rules_md,
-              poolAddress: distributionRules.pool_addr,
+              description: (repoAddress && repoAddress.bio) || "",
+              ethAddress: (repoAddress && repoAddress.eth_addr) || "0x0",
+              distributionRulesJSON: (distributionRules && distributionRules.distribution_rules_json) || {},
+              distributionRulesMD: (distributionRules && distributionRules.distribution_rules_md) || "",
+              poolAddress: (distributionRules && distributionRules.pool_addr) || "0x0",
             };
           }),
         );
@@ -86,14 +84,31 @@ const BlockExplorer: NextPage = () => {
       </h1>
       <br />
       <div className="flex justify-center items-center space-x-4">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-center space-x-2">
           <label className="switch">
             <input type="checkbox" checked={viewMode === "map"} onChange={handleToggleChange} />
             <span className="slider round"></span>
           </label>
-          <span>{viewMode === "gallery" ? "Gallery View" : "Map View"}</span>
+          <span className="badge badge-primary">{viewMode === "gallery" ? "Gallery View" : "Map View"}</span>
         </div>
-        <SearchBar className="w-96" />
+        <div>
+          <input
+            type="text"
+            value={repoLink}
+            onChange={handleInputChange}
+            placeholder="Enter GitHub repo link"
+            className="input input-bordered input-primary w-96"
+          />
+          <button disabled={loading} onClick={handleLoadRepo} className="btn btn-primary ml-2 w-28">
+            {loading ? (
+              <span className="flex justify-center items-center">
+                Loading<span className="loading loading-dots loading-xs"></span>
+              </span>
+            ) : (
+              <span>Search</span>
+            )}
+          </button>
+        </div>
       </div>
       <br />
       {loading ? (
@@ -103,15 +118,16 @@ const BlockExplorer: NextPage = () => {
       ) : (
         <ApolloProvider client={client}>
           {viewMode === "gallery" ? (
-            <GithubShow repositories={repositories} />
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
+            <GithubShow canRemove={false} removeRepoHandle={() => {}} repositories={repositories} />
           ) : (
             <div>
               {/* Replace with the related map component */}
               <div style={{ width: "100%", height: "auto" }}>
                 <center>
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: `
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: `
           <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <style>
     .repo { fill: lightblue; stroke: blue; stroke-width: 2px; }
@@ -170,8 +186,8 @@ const BlockExplorer: NextPage = () => {
   <text x="400" y="250" text-anchor="middle" dy=".3em" class="text">30% * 50%</text>
 </svg>
         `,
-                  }}
-                />
+                    }}
+                  />
                 </center>
               </div>
             </div>
