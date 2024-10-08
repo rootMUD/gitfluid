@@ -22,7 +22,19 @@ export const menuLinks: HeaderMenuLink[] = [
   {
     label: "Projects",
     href: "/projects",
-  }
+  },
+  {
+    label: "Find Tasks",
+    href: "https://according-work-beta.netlify.app/projects",
+  },
+  {
+    label: "Profile",
+    href: "https://according-work-beta.netlify.app//profile",
+  },
+  {
+    label: "Buy Early Shares!",
+    href: "https://bodhi.wtf/space/5/15092/?action=buy",
+  },
   // {
   //   label: "Debug Contracts",
   //   href: "/debug",
